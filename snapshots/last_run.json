@@ -1,0 +1,169 @@
+{
+ "run_at": "2026-09-11",
+ "rows": {
+  "cm": 96802,
+  "pcs": 78530,
+  "map14_cm": 74873,
+  "map14_pcs": 79062,
+  "map9_cm": 87028,
+  "map9_pcs": 104313
+ },
+ "sources_sha": {
+  "cm": "acd950e2ae193ac7c1438165584d48cfa239a9ac6ae9819444cae4d679e123dc",
+  "pcs": "eef614a078f3c47628717c79b842859b32104ced56114de43387c2d98bae28ad",
+  "map14_cm": "1cfa786b542d0c0bdeb9dd35be0003b20ad6ebb3d3f3497410f4231c92dac7e4",
+  "map14_pcs": "39c4a774132e2e2fe81fcde4f3b096350c41c09395ded4f19086ef579694e995",
+  "map9_cm": "8ff64465b5ca196a593b5f35e684e979f92159abc81cdde42689d639767f30a9",
+  "map9_pcs": "cfbf7c8e5ba13c971ab3cd1b84814f6d15d11edec8be16e496b9d0098b74f8b7"
+ },
+ "vocab_cm": 239920,
+ "data_fingerprint": "bd1240d98382c358",
+ "sources": {
+  "nhi": {
+   "cm": {
+    "rows": 96802,
+    "sha256": "acd950e2ae193ac7"
+   },
+   "pcs": {
+    "rows": 78530,
+    "sha256": "eef614a078f3c476"
+   },
+   "map14_cm": {
+    "rows": 74873,
+    "sha256": "1cfa786b542d0c0b"
+   },
+   "map14_pcs": {
+    "rows": 79062,
+    "sha256": "39c4a774132e2e2f"
+   },
+   "map9_cm": {
+    "rows": 87028,
+    "sha256": "8ff64465b5ca196a"
+   },
+   "map9_pcs": {
+    "rows": 104313,
+    "sha256": "cfbf7c8e5ba13c97"
+   }
+  },
+  "cdc": "FY2023",
+  "cms": "2023",
+  "doid": "releases/2026-08-31/doid.obo",
+  "mesh": 2026,
+  "naer": "醫學名詞",
+  "catastrophic": "113.10.14"
+ },
+ "gates": [
+  {
+   "id": 1,
+   "name": "CSV 表頭契約",
+   "passed": true,
+   "message": "6 檔全符合",
+   "overridden": false
+  },
+  {
+   "id": 2,
+   "name": "筆數健檢",
+   "passed": true,
+   "message": "CM 96,802／PCS 78,530",
+   "overridden": false
+  },
+  {
+   "id": 3,
+   "name": "代碼格式與唯一性",
+   "passed": true,
+   "message": "格式錯/重複 0｜CM 格式 0｜PCS 格式 0",
+   "overridden": false
+  },
+  {
+   "id": 4,
+   "name": "階層封閉／章節涵蓋",
+   "passed": true,
+   "message": "孤兒 []｜未涵蓋類目 []｜章節範圍不符 []",
+   "overridden": false
+  },
+  {
+   "id": 5,
+   "name": "CJK 相容字已正規化",
+   "passed": true,
+   "message": "殘留 0（正規化前 7625）",
+   "overridden": false
+  },
+  {
+   "id": 6,
+   "name": "金絲雀碼",
+   "passed": true,
+   "message": "12/12",
+   "overridden": false
+  },
+  {
+   "id": 7,
+   "name": "對應檔目標碼存在",
+   "passed": true,
+   "message": "全部存在",
+   "overridden": false
+  },
+  {
+   "id": 8,
+   "name": "重大傷病對照表",
+   "passed": true,
+   "message": "3,091 碼｜主檔查無 0｜未命名類別 []｜sha ✓",
+   "overridden": false
+  },
+  {
+   "id": 9,
+   "name": "皮膚科子集首載",
+   "passed": true,
+   "message": "5,350 碼｜gzip 230 KB（上限 400）",
+   "overridden": false
+  },
+  {
+   "id": 10,
+   "name": "入口詞目標碼有效（無 ICD-9 混入）",
+   "passed": true,
+   "message": "CM 239,920／PCS 71,805 條",
+   "overridden": false
+  },
+  {
+   "id": 11,
+   "name": "詞彙量健檢",
+   "passed": true,
+   "message": "239,920（上期 239867）｜各來源 {'cdc-idx': 89969, 'cdc-see': 12845, 'cdc-incl': 10740, 'cdc-neo': 9012, 'doid': 10350, 'doid-rel': 198, 'mesh': 20802, 'zh14': 65339, 'zh9': 10221, 'en9': 9196, 'naer': 1103, 'wd': 8922, 'wd-alias': 50144, 'cur-zh': 45, 'cur-abbr': 31, 'fix-zh': 7, 'cms-idx': 12801}",
+   "overridden": false
+  },
+  {
+   "id": 12,
+   "name": "預設碼可申報",
+   "passed": true,
+   "message": "99.7%（20,638 個主詞；非可申報且非第 7 碼類目 57：['M43.8', 'M43.8', 'M43.8', 'M43.8', 'K08.10']）",
+   "overridden": false
+  },
+  {
+   "id": 13,
+   "name": "出處與版本標示",
+   "passed": true,
+   "message": "齊全",
+   "overridden": false
+  },
+  {
+   "id": 14,
+   "name": "檔名乾淨",
+   "passed": true,
+   "message": "全部 ASCII",
+   "overridden": false
+  },
+  {
+   "id": 16,
+   "name": "官方中文名亂碼",
+   "passed": true,
+   "message": "已知 8、本次 8",
+   "overridden": false
+  },
+  {
+   "id": 15,
+   "name": "資料指紋",
+   "passed": true,
+   "message": "bd1240d98382c358 vs meta bd1240d98382c358",
+   "overridden": false
+  }
+ ]
+}

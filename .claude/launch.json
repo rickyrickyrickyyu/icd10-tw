@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "icd10-tw",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--port", "5193"],
+      "port": 5193
+    }
+  ]
+}

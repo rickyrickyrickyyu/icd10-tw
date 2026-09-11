@@ -1,0 +1,17 @@
+# 原始下載檔不進 git：6 個健保 CSV 每次約 120 MB，可重抓；快照只記 sha（snapshots/）。
+data/raw/
+data/build/
+node_modules/
+dist/
+.DS_Store
+*.pyc
+__pycache__/
+
+# 離線包每次重產；只有 MANIFEST.txt 進版控，方便回溯「某次帶出去的是哪一版」。
+dist-offline/
+offline/*.html
+offline/*.zip
+offline/READ-ME-FIRST.txt
+
+# 基準測試的暫存輸出（歷史紀錄 bench_history.jsonl 與 baseline.json 要進版控）
+tests/bench/out/

@@ -1,0 +1,52 @@
+# 中文俗稱 → ICD-10-CM（人工策展）
+#
+# ★ 規則：pipeline 只收 approved: true 的條目。每一條都要醫師看過：
+#   俗稱常常一對多或語意比正式診斷寬（「老人斑」可能是脂漏性角化或雀斑樣痣），
+#   給錯一個碼等於把使用者帶去申報錯的診斷。
+# ★ 草擬：Claude（2026-09-11）。依據是臨床常用對應，不是官方文件 —— 正因如此才需要核可。
+# 核可方式：把 approved 改成 true（整份都看完可用 sed 一次改），然後 make rebuild。
+reviewed_by: "M116 RickyYu（2026-09-11 全部核可）"
+items:
+  - {term: 皮蛇, codes: [B02.9], note: 帶狀疱疹台語俗稱, approved: true}
+  - {term: 飛蛇, codes: [B02.9], note: 帶狀疱疹俗稱, approved: true}
+  - {term: 生蛇, codes: [B02.9], note: 帶狀疱疹俗稱（港）, approved: true}
+  - {term: 香港腳, codes: [B35.3], note: 足癬, approved: true}
+  - {term: 灰指甲, codes: [B35.1], note: 甲癬, approved: true}
+  - {term: 富貴手, codes: [L24.9, L30.9], note: 手部濕疹；刺激性接觸性皮膚炎或未明示皮膚炎，視病因, approved: true}
+  - {term: 青春痘, codes: [L70.0], note: 尋常性痤瘡, approved: true}
+  - {term: 痘痘, codes: [L70.0], note: 尋常性痤瘡, approved: true}
+  - {term: 酒糟鼻, codes: [L71.9, L71.1], note: 酒糟；鼻瘤另編 L71.1, approved: true}
+  - {term: 鬼剃頭, codes: [L63.9], note: 圓禿, approved: true}
+  - {term: 狐臭, codes: [L75.0], note: 臭汗症, approved: true}
+  - {term: 老人斑, codes: [L82.1, L81.4], note: 脂漏性角化症或雀斑樣痣，需依臨床判斷, approved: true}
+  - {term: 牛皮癬, codes: [L40.9], note: 乾癬（中國大陸常用稱呼）, approved: true}
+  - {term: 蛇皮症, codes: [Q80.0], note: 尋常性魚鱗癬, approved: true}
+  - {term: 風疹塊, codes: [L50.9], note: 蕁麻疹, approved: true}
+  - {term: 皮膚癢, codes: [L29.9], note: 搔癢症, approved: true}
+  - {term: 痱子, codes: [L74.0], note: 紅色粟粒疹, approved: true}
+  - {term: 尿布疹, codes: [L22], note: 尿布皮膚炎, approved: true}
+  - {term: 唇疱疹, codes: [B00.1], note: 單純疱疹病毒性水疱性皮膚炎, approved: true}
+  - {term: 口角炎, codes: [K13.0], note: 口角唇炎, approved: true}
+  - {term: 藥疹, codes: [L27.0, L27.1], note: 藥物所致皮疹（全身性／局部性）, approved: true}
+  - {term: 蟹足腫, codes: [L91.0], note: 蟹足腫／肥厚性疤痕, approved: true}
+  - {term: 針眼, codes: [H00.019], note: 麥粒腫（未明示眼瞼）, approved: true}
+  - {term: 五十肩, codes: [M75.00], note: 沾黏性肩關節囊炎（未明示側）, approved: true}
+  - {term: 板機指, codes: [M65.30], note: 扳機指（未明示手指）, approved: true}
+  - {term: 媽媽手, codes: [M65.4], note: 狄奎凡氏腱鞘炎, approved: true}
+  - {term: 網球肘, codes: [M77.10], note: 外上髁炎（未明示側）, approved: true}
+  - {term: 高爾夫球肘, codes: [M77.00], note: 內上髁炎（未明示側）, approved: true}
+  - {term: 中風, codes: [I63.9, I61.9], note: 腦梗塞或腦出血，需依影像區分, approved: true}
+  - {term: 感冒, codes: [J00], note: 急性鼻咽炎, approved: true}
+  - {term: 腸病毒, codes: [B34.1], note: 腸病毒感染（未明示）；手足口病另編 B08.4, approved: true}
+  - {term: 骨刺, codes: [M25.70], note: 骨贅（未明示部位）, approved: true}
+  - {term: 蛀牙, codes: [K02.9], note: 齲齒, approved: true}
+  # ── 基準測試 v6 失分題裡「台灣慣用說法 ≠ 官方譯名」的補充 ──
+  - {term: 狹心症, codes: [I20.9], note: 官方譯名「心絞痛」, approved: true}
+  - {term: 甲狀腺機能亢進, codes: [E05.90], note: 否則會被「副甲狀腺機能亢進」子字串搶走, approved: true}
+  - {term: 甲狀腺機能低下, codes: [E03.9], note: 官方譯名「甲狀腺低下」, approved: true}
+  - {term: 退化性膝關節炎, codes: [M17.9], note: 官方譯名「膝部骨關節炎」, approved: true}
+  - {term: 退化性關節炎, codes: [M19.90], note: 官方譯名「骨關節炎」, approved: true}
+  - {term: 足底疣, codes: [B07.0], note: 官方譯名「蹠疣」, approved: true}
+  - {term: 異位性濕疹, codes: [L20.9], note: 異位性皮膚炎, approved: true}
+  - {term: 慢性蕁麻疹, codes: [L50.8, L50.1], note: 慢性自發性蕁麻疹多編 L50.1（特發性）或 L50.8, approved: true}
+  - {term: 白斑症, codes: [L80], note: 皮膚科語境＝白斑（vitiligo）；黏膜白斑症另有各器官碼, approved: true}

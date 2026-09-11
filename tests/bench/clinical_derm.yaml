@@ -1,0 +1,244 @@
+# 皮膚科實際查法。gold 任一命中即算對；"X*" = 以 X 開頭的任何碼。
+# 題型：zh 正式名、zh 俗稱、en、英式拼法、縮寫、錯字、詞序打亂、中英混打。
+# ⚠️ 由 Claude 草擬，gold 已由 run.mjs 逐一核對存在於 2023 版；臨床判斷請抽查。
+# 俗稱／縮寫題刻意保留：它們在 curation/synonyms_zh.yaml 核可前「應該」會失分，
+# 這個落差就是策展的價值證據。
+items:
+  # 乾癬
+  - {q: 乾癬, gold: ["L40*"]}
+  - {q: 牛皮癬, gold: ["L40*"], tag: colloquial}
+  - {q: 尋常性乾癬, gold: [L40.0]}
+  - {q: psoriasis vulgaris, gold: [L40.0]}
+  - {q: plaque psoriasis, gold: [L40.0]}
+  - {q: 乾癬性關節炎, gold: ["L40.5*"]}
+  - {q: psoriatic arthritis, gold: ["L40.5*"]}
+  - {q: 膿疱性乾癬, gold: [L40.1, L40.3]}
+  - {q: guttate psoriasis, gold: [L40.4]}
+  - {q: 滴狀乾癬, gold: [L40.4]}
+  - {q: psoraisis, gold: ["L40*"], tag: typo}
+  - {q: psoriasis arthritis, gold: ["L40.5*"], tag: order}
+  # 異位性／濕疹
+  - {q: 異位性皮膚炎, gold: ["L20*"]}
+  - {q: atopic dermatitis, gold: ["L20*"]}
+  - {q: dermatitis atopic, gold: ["L20*"], tag: order}
+  - {q: atopic eczema, gold: ["L20*"]}
+  - {q: 異位性濕疹, gold: ["L20*"]}
+  - {q: flexural eczema, gold: [L20.82]}
+  - {q: infantile eczema, gold: [L20.83]}
+  - {q: 嬰兒濕疹, gold: [L20.83, "L21.1"]}
+  - {q: 濕疹, gold: [L30.9]}
+  - {q: eczema, gold: [L30.9]}
+  - {q: 汗疱疹, gold: [L30.1]}
+  - {q: dyshidrotic eczema, gold: [L30.1]}
+  - {q: pompholyx, gold: [L30.1]}
+  - {q: 錢幣狀濕疹, gold: [L30.0]}
+  - {q: nummular eczema, gold: [L30.0]}
+  - {q: 接觸性皮膚炎, gold: ["L23*", "L24*", "L25*"]}
+  - {q: allergic contact dermatitis, gold: ["L23*"]}
+  - {q: irritant contact dermatitis, gold: ["L24*"]}
+  - {q: 刺激性接觸性皮膚炎, gold: ["L24*"]}
+  - {q: 過敏性接觸性皮膚炎, gold: ["L23*"]}
+  - {q: nickel dermatitis, gold: [L23.0]}
+  - {q: 脂漏性皮膚炎, gold: ["L21*"]}
+  - {q: seborrheic dermatitis, gold: ["L21*"]}
+  - {q: seborrhoeic dermatitis, gold: ["L21*"], tag: brit}
+  - {q: dandruff, gold: [L21.0]}
+  - {q: 尿布疹, gold: ["L22"]}
+  - {q: diaper rash, gold: ["L22"]}
+  - {q: 富貴手, gold: [L30.9, "L25*", "L24*"], tag: colloquial}
+  # 蕁麻疹
+  - {q: 蕁麻疹, gold: ["L50*"]}
+  - {q: urticaria, gold: ["L50*"]}
+  - {q: hives, gold: ["L50*"]}
+  - {q: chronic urticaria, gold: [L50.8, L50.1]}
+  - {q: 慢性蕁麻疹, gold: [L50.8, L50.1]}
+  - {q: 慢性自發性蕁麻疹, gold: [L50.1, L50.8]}
+  - {q: 風疹塊, gold: ["L50*"], tag: colloquial}
+  - {q: angioedema, gold: [T78.3]}
+  - {q: 血管性水腫, gold: [T78.3]}
+  # 病毒
+  - {q: 帶狀疱疹, gold: ["B02*"]}
+  - {q: 帶狀皰疹, gold: ["B02*"], tag: variant}
+  - {q: 皮蛇, gold: ["B02*"], tag: colloquial}
+  - {q: shingles, gold: ["B02*"]}
+  - {q: herpes zoster, gold: ["B02*"]}
+  - {q: zoster herpes, gold: ["B02*"], tag: order}
+  - {q: herpes zoster ophthalmicus, gold: ["B02.3*"]}
+  - {q: 眼部帶狀疱疹, gold: ["B02.3*"]}
+  - {q: postherpetic neuralgia, gold: [B02.29]}
+  - {q: 疱疹後神經痛, gold: [B02.29]}
+  - {q: herpes simplex, gold: ["B00*"]}
+  - {q: 單純疱疹, gold: ["B00*"]}
+  - {q: cold sore, gold: [B00.1]}
+  - {q: genital herpes, gold: ["A60*"]}
+  - {q: 生殖器疱疹, gold: ["A60*"]}
+  - {q: 水痘, gold: ["B01*"]}
+  - {q: chickenpox, gold: ["B01*"]}
+  - {q: 疣, gold: ["B07*"]}
+  - {q: warts, gold: ["B07*"]}
+  - {q: plantar wart, gold: [B07.0]}
+  - {q: 足底疣, gold: [B07.0]}
+  - {q: 尖形濕疣, gold: [A63.0]}
+  - {q: condyloma acuminatum, gold: [A63.0]}
+  - {q: genital warts, gold: [A63.0]}
+  - {q: 傳染性軟疣, gold: [B08.1]}
+  - {q: molluscum contagiosum, gold: [B08.1]}
+  - {q: 手足口病, gold: [B08.4]}
+  - {q: hand foot and mouth disease, gold: [B08.4]}
+  # 細菌
+  - {q: 蜂窩性組織炎, gold: ["L03*"]}
+  - {q: cellulitis, gold: ["L03*"]}
+  - {q: cellulitis of leg, gold: ["L03.11*"]}
+  - {q: 下肢蜂窩性組織炎, gold: ["L03.11*"]}
+  - {q: 丹毒, gold: [A46]}
+  - {q: erysipelas, gold: [A46]}
+  - {q: 膿痂疹, gold: ["L01*"]}
+  - {q: impetigo, gold: ["L01*"]}
+  - {q: 毛囊炎, gold: [L73.9, "L73*"]}
+  - {q: folliculitis, gold: [L73.9, "L73*"]}
+  - {q: furuncle, gold: ["L02*"]}
+  - {q: 癤, gold: ["L02*"]}
+  - {q: carbuncle, gold: ["L02*"]}
+  - {q: skin abscess, gold: ["L02*"]}
+  - {q: paronychia, gold: ["L03.0*"]}
+  - {q: 甲溝炎, gold: ["L03.0*"]}
+  # 黴菌、寄生蟲
+  - {q: 香港腳, gold: [B35.3], tag: colloquial}
+  - {q: athlete's foot, gold: [B35.3]}
+  - {q: tinea pedis, gold: [B35.3]}
+  - {q: 足癬, gold: [B35.3]}
+  - {q: 灰指甲, gold: [B35.1], tag: colloquial}
+  - {q: onychomycosis, gold: [B35.1]}
+  - {q: 甲癬, gold: [B35.1]}
+  - {q: tinea cruris, gold: [B35.6]}
+  - {q: jock itch, gold: [B35.6]}
+  - {q: 股癬, gold: [B35.6]}
+  - {q: tinea corporis, gold: [B35.4]}
+  - {q: ringworm, gold: ["B35*"]}
+  - {q: 體癬, gold: [B35.4]}
+  - {q: tinea capitis, gold: [B35.0]}
+  - {q: 頭癬, gold: [B35.0]}
+  - {q: 汗斑, gold: [B36.0], tag: colloquial}
+  - {q: tinea versicolor, gold: [B36.0]}
+  - {q: pityriasis versicolor, gold: [B36.0]}
+  - {q: candidiasis, gold: ["B37*"]}
+  - {q: 念珠菌感染, gold: ["B37*"]}
+  - {q: oral thrush, gold: [B37.0]}
+  - {q: 疥瘡, gold: [B86]}
+  - {q: scabies, gold: [B86]}
+  - {q: head lice, gold: [B85.0]}
+  - {q: 頭蝨, gold: [B85.0]}
+  - {q: leprosy, gold: ["A30*"]}
+  - {q: 漢生病, gold: ["A30*"]}
+  - {q: secondary syphilis, gold: ["A51.3*", "A51.4*"]}
+  # 痤瘡、附屬器
+  - {q: 痤瘡, gold: ["L70*"]}
+  - {q: acne, gold: ["L70*"]}
+  - {q: 青春痘, gold: ["L70*"], tag: colloquial}
+  - {q: acne vulgaris, gold: [L70.0]}
+  - {q: 尋常性痤瘡, gold: [L70.0]}
+  - {q: 酒糟, gold: ["L71*"]}
+  - {q: rosacea, gold: ["L71*"]}
+  - {q: rhinophyma, gold: [L71.1]}
+  - {q: hidradenitis suppurativa, gold: [L73.2]}
+  - {q: 化膿性汗腺炎, gold: [L73.2]}
+  - {q: perioral dermatitis, gold: [L71.0]}
+  - {q: alopecia areata, gold: ["L63*"]}
+  - {q: 圓禿, gold: ["L63*"]}
+  - {q: 鬼剃頭, gold: ["L63*"], tag: colloquial}
+  - {q: androgenetic alopecia, gold: ["L64*"]}
+  - {q: 雄性禿, gold: ["L64*"]}
+  - {q: ingrown toenail, gold: [L60.0]}
+  - {q: 嵌甲, gold: [L60.0]}
+  - {q: hyperhidrosis, gold: ["L74.5*", R61]}
+  - {q: 多汗症, gold: ["L74.5*", R61]}
+  - {q: 狐臭, gold: [L75.0], tag: colloquial}
+  - {q: bromhidrosis, gold: [L75.0]}
+  # 色素
+  - {q: vitiligo, gold: [L80]}
+  - {q: 白斑症, gold: [L80]}
+  - {q: melasma, gold: [L81.1]}
+  - {q: 肝斑, gold: [L81.1]}
+  - {q: freckles, gold: [L81.2]}
+  - {q: 雀斑, gold: [L81.2]}
+  - {q: seborrheic keratosis, gold: ["L82*"]}
+  - {q: 脂漏性角化症, gold: ["L82*"]}
+  - {q: 老人斑, gold: ["L82*", L81.4], tag: colloquial}
+  # 免疫、水疱
+  - {q: pemphigus vulgaris, gold: [L10.0]}
+  - {q: 尋常性天疱瘡, gold: [L10.0]}
+  - {q: bullous pemphigoid, gold: [L12.0]}
+  - {q: 類天疱瘡, gold: ["L12*"]}
+  - {q: systemic lupus erythematosus, gold: ["M32*"]}
+  - {q: SLE, gold: ["M32*"], tag: abbrev}
+  - {q: 紅斑性狼瘡, gold: ["M32*", "L93*"]}
+  - {q: discoid lupus, gold: [L93.0]}
+  - {q: dermatomyositis, gold: ["M33*"]}
+  - {q: 皮肌炎, gold: ["M33*"]}
+  - {q: morphea, gold: [L94.0]}
+  - {q: scleroderma, gold: ["M34*", L94.0]}
+  - {q: lichen planus, gold: ["L43*"]}
+  - {q: 扁平苔癬, gold: ["L43*"]}
+  - {q: pityriasis rosea, gold: [L42]}
+  - {q: 玫瑰糠疹, gold: [L42]}
+  - {q: prurigo nodularis, gold: [L28.1]}
+  - {q: 結節性癢疹, gold: [L28.1]}
+  - {q: lichen simplex chronicus, gold: [L28.0]}
+  - {q: pruritus, gold: ["L29*"]}
+  - {q: 皮膚癢, gold: ["L29*"]}
+  # 藥物反應
+  - {q: drug eruption, gold: [L27.0, L27.1]}
+  - {q: 藥疹, gold: [L27.0, L27.1]}
+  - {q: fixed drug eruption, gold: [L27.1]}
+  - {q: Stevens-Johnson syndrome, gold: [L51.1, L51.3]}
+  - {q: SJS, gold: [L51.1, L51.3], tag: abbrev}
+  - {q: toxic epidermal necrolysis, gold: [L51.2]}
+  - {q: TEN, gold: [L51.2], tag: abbrev}
+  - {q: DRESS syndrome, gold: [D72.12]}
+  - {q: erythema multiforme, gold: ["L51*"]}
+  - {q: 多形性紅斑, gold: ["L51*"]}
+  - {q: erythema nodosum, gold: [L52]}
+  - {q: 結節性紅斑, gold: [L52]}
+  # 腫瘤
+  - {q: basal cell carcinoma, gold: ["C44*"]}
+  - {q: 基底細胞癌, gold: ["C44*"]}
+  - {q: BCC, gold: ["C44*"], tag: abbrev}
+  - {q: basal cell carcinoma of nose, gold: [C44.311]}
+  - {q: squamous cell carcinoma of skin, gold: ["C44*"]}
+  - {q: melanoma, gold: ["C43*"]}
+  - {q: 黑色素瘤, gold: ["C43*"]}
+  - {q: 惡性黑色素瘤, gold: ["C43*"]}
+  - {q: melanoma in situ, gold: ["D03*"]}
+  - {q: actinic keratosis, gold: [L57.0]}
+  - {q: 日光性角化症, gold: [L57.0]}
+  - {q: nevus, gold: ["D22*"]}
+  - {q: mole, gold: ["D22*"]}
+  - {q: lipoma, gold: ["D17*"]}
+  - {q: 脂肪瘤, gold: ["D17*"]}
+  - {q: hemangioma, gold: ["D18.0*"]}
+  - {q: 血管瘤, gold: ["D18.0*"]}
+  - {q: epidermal cyst, gold: [L72.0]}
+  - {q: sebaceous cyst, gold: [L72.3, L72.0]}
+  - {q: keloid, gold: [L91.0]}
+  - {q: 蟹足腫, gold: [L91.0]}
+  - {q: skin tag, gold: [L91.8]}
+  - {q: corn, gold: [L84]}
+  - {q: 雞眼, gold: [L84]}
+  - {q: mycosis fungoides, gold: ["C84.0*"]}
+  - {q: 蕈狀肉芽腫, gold: ["C84.0*"]}
+  # 其他
+  - {q: sunburn, gold: ["L55*"]}
+  - {q: 曬傷, gold: ["L55*"]}
+  - {q: chilblains, gold: [T69.1]}
+  - {q: 凍瘡, gold: [T69.1]}
+  - {q: pressure ulcer, gold: ["L89*"]}
+  - {q: 褥瘡, gold: ["L89*"]}
+  - {q: bedsore, gold: ["L89*"]}
+  # 無靜脈曲張的靜脈性潰瘍依 ICD 規則編 I87.31x（慢性靜脈高血壓伴潰瘍）或 I87.2 —— v0 gold 漏列
+  - {q: venous ulcer, gold: ["I83.0*", "I83.2*", "L97*", "I87.31*", I87.2]}
+  - {q: ichthyosis vulgaris, gold: [Q80.0]}
+  - {q: 魚鱗癬, gold: ["Q80*"]}
+  - {q: epidermolysis bullosa, gold: ["Q81*"]}
+  - {q: neurofibromatosis, gold: ["Q85.0*"]}
+  - {q: HSV感染, gold: ["B00*"], tag: mixed}
+  - {q: 疱疹 zoster, gold: ["B02*"], tag: mixed}

@@ -1,0 +1,168 @@
+name: update
+# 每週自動更新（週二 05:00 台北）。
+#   1. 比對健保署 6 個 CSV 的 sha（官方「不定期更新」，比 sha 不比日期）
+#   2. 詞彙層（CDC/CMS/DOID/MeSH/國教院/Wikidata）每月第一週才重抓 —— 用 actions/cache
+#      以「年-月」為 key，同一個月內沿用，免得每週因 Wikidata 小編輯就改版一次
+#   3. 有變 → 完整 pipeline（閘門＋搜尋回歸）→ commit → Release（附離線包）
+#   4. 不管有沒有變都重新部署，並把 checked_at 注入 dist 的 meta.json：
+#      網站上的「最後自動檢查」停了超過 21 天 = 這個排程壞了
+on:
+  schedule:
+    - cron: '0 21 * * 1'
+  workflow_dispatch:
+    inputs:
+      override_gate:
+        description: '人工確認後放行的 gate 編號，逗號分隔（例 2,11）'
+        type: string
+        default: ''
+      force:
+        description: '不管 sha 有沒有變都重建（含詞彙層）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  issues: write
+
+concurrency:
+  group: icd-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+      - name: Python 依賴
+        run: uv pip install --system pyyaml
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: 月份 key
+        id: month
+        run: echo "ym=$(date +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: 詞彙層快取（同月沿用）
+        id: vocab
+        uses: actions/cache@v4
+        with:
+          path: data/raw/vocab
+          key: vocab-${{ steps.month.outputs.ym }}
+
+      - name: 健保資料有沒有變
+        id: check
+        run: |
+          python3 etl/fetch_csv.py --check | tee check.log
+          echo "changed=$(grep -o 'CHANGED=[01]' check.log | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: 重大傷病對照表頁面檢查（Playwright；WAF 擋 curl）
+        id: catas
+        continue-on-error: true
+        run: |
+          npx playwright install --with-deps chromium >/dev/null
+          PW_CHANNEL=chromium node bin/fetch_catastrophic.mjs --check | tee catas.json
+          CUR=$(python3 -c "import yaml;print(yaml.safe_load(open('curation/catastrophic.yaml'))['version'])")
+          NEW=$(python3 -c "import json,re;t=json.load(open('catas.json'))['title'];m=re.search(r'\((\d{3}\.\d{1,2}\.\d{1,2})更新\)',t);print(m.group(1) if m else '')")
+          echo "cur=$CUR new=$NEW"
+          [[ -n "$NEW" && "$NEW" != "$CUR" ]] && echo "changed=1" >> "$GITHUB_OUTPUT" || echo "changed=0" >> "$GITHUB_OUTPUT"
+
+      - name: 完整 pipeline（有變才跑）
+        id: pipe
+        if: steps.check.outputs.changed == '1' || steps.vocab.outputs.cache-hit != 'true' || inputs.force
+        env:
+          OVERRIDE: ${{ inputs.override_gate }}
+        run: |
+          bash bin/pipeline.sh fetch $([[ "${{ steps.vocab.outputs.cache-hit }}" != "true" || "${{ inputs.force }}" == "true" ]] && echo --vocab)
+          echo "ran=1" >> "$GITHUB_OUTPUT"
+
+      - name: 保留 staging 供人工檢視
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-${{ github.run_id }}
+          path: data/build/.staging
+          if-no-files-found: ignore
+
+      - name: commit（只收資料管線路徑）
+        id: commit
+        if: steps.pipe.outputs.ran == '1'
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          python3 bin/pre_push_check.py
+          git add public/data snapshots offline/MANIFEST.txt tests/bench/bench_history.jsonl
+          if git diff --cached --quiet; then
+            echo "無變更"; echo "new=0" >> "$GITHUB_OUTPUT"
+          else
+            FP=$(python3 -c "import json;print(json.load(open('public/data/meta.json'))['data_fingerprint'])")
+            git commit -m "chore(data): $(date +%F) 資料更新（指紋 ${FP}）"
+            git push
+            echo "new=1" >> "$GITHUB_OUTPUT"
+            echo "fp=${FP}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 發 Release（附離線包）
+        if: steps.commit.outputs.new == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="data-$(date +%Y%m%d)"
+          gh release create "$TAG" offline/*.zip offline/READ-ME-FIRST.txt \
+            --title "資料更新 $(date +%F)" \
+            --notes "資料指紋 ${{ steps.commit.outputs.fp }}。離線版：下載 zip、解壓後雙擊 html。" || true
+
+      # ★ GITHUB_TOKEN 的 push 不會觸發其他 workflow，所以 build+deploy 必須在這裡做
+      - name: 建置網站並注入 checked_at
+        run: |
+          pnpm build
+          python3 - <<'PY'
+          import json, datetime, pathlib
+          p = pathlib.Path('dist/data/meta.json')
+          m = json.loads(p.read_text(encoding='utf-8'))
+          m['checked_at'] = datetime.date.today().isoformat()
+          p.write_text(json.dumps(m, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: 重大傷病對照表有新版 → 開 issue（人工下載核對，不自動套用）
+        if: steps.catas.outputs.changed == '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo,
+              title: '重大傷病對照表有新版',
+              body: '健保署頁面上的對照表版本與 curation/catastrophic.yaml 不同。\n本機執行 `make catas` 下載、更新 yaml 的 file/sha256/version 與類別名稱後 `make rebuild`。' });
+
+      - name: 失敗時開 issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo,
+              title: `❌ ${new Date().toISOString().slice(0,10)} 自動更新失敗`,
+              body: `閘門、搜尋回歸或抓取失敗；正式資料未被修改（fail-closed），網站維持上一版。\n若是 gate 1（表頭契約）失敗，健保署可能已轉版到新年度 ICD，需要人工處理。\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` });
+
+  deploy:
+    needs: refresh
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

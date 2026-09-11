@@ -1,0 +1,184 @@
+# 門診常見（非皮膚科），用全庫索引跑。格式同 clinical_derm.yaml。
+# ⚠️ 由 Claude 草擬，gold 已由 run.mjs 核對存在；臨床判斷請抽查。
+items:
+  - {q: 高血壓, gold: [I10]}
+  - {q: hypertension, gold: [I10]}
+  - {q: essential hypertension, gold: [I10]}
+  - {q: 本態性高血壓, gold: [I10]}
+  - {q: 第二型糖尿病, gold: ["E11*"]}
+  - {q: type 2 diabetes, gold: ["E11*"]}
+  - {q: 糖尿病, gold: ["E11*", "E10*", "E13*"]}
+  - {q: diabetes mellitus, gold: ["E11*", "E10*", "E13*"]}
+  - {q: 糖尿病腎病變, gold: [E11.21, E10.21, E13.21]}
+  - {q: diabetic nephropathy, gold: [E11.21, E10.21, E13.21]}
+  - {q: 糖尿病視網膜病變, gold: ["E11.3*", "E10.3*"]}
+  - {q: diabetic retinopathy, gold: ["E11.3*", "E10.3*"]}
+  - {q: diabetic neuropathy, gold: ["E11.4*", "E10.4*"]}
+  - {q: diabetic foot ulcer, gold: [E11.621, E10.621, E13.621]}
+  - {q: 高血脂, gold: ["E78*"]}
+  - {q: hyperlipidemia, gold: ["E78*"]}
+  - {q: hypercholesterolemia, gold: ["E78.0*"]}
+  - {q: 痛風, gold: ["M10*", "M1A*"]}
+  - {q: gout, gold: ["M10*", "M1A*"]}
+  - {q: 退化性膝關節炎, gold: ["M17*"]}
+  - {q: knee osteoarthritis, gold: ["M17*"]}
+  - {q: osteoarthritis of knee, gold: ["M17*"]}
+  - {q: osteoarthritis, gold: ["M15*", "M16*", "M17*", "M18*", "M19*"]}
+  - {q: 骨質疏鬆症, gold: ["M81*", "M80*"]}
+  - {q: osteoporosis, gold: ["M81*", "M80*"]}
+  - {q: low back pain, gold: ["M54.5*"]}
+  - {q: 下背痛, gold: ["M54.5*"]}
+  - {q: sciatica, gold: ["M54.3*", "M54.4*"]}
+  - {q: 坐骨神經痛, gold: ["M54.3*", "M54.4*"]}
+  - {q: frozen shoulder, gold: ["M75.0*"]}
+  - {q: 五十肩, gold: ["M75.0*"], tag: colloquial}
+  - {q: trigger finger, gold: ["M65.3*"]}
+  - {q: 板機指, gold: ["M65.3*"], tag: colloquial}
+  - {q: carpal tunnel syndrome, gold: ["G56.0*"]}
+  - {q: 腕隧道症候群, gold: ["G56.0*"]}
+  - {q: migraine, gold: ["G43*"]}
+  - {q: 偏頭痛, gold: ["G43*"]}
+  - {q: headache, gold: ["R51*", "G44*"]}
+  - {q: 頭痛, gold: ["R51*", "G44*"]}
+  - {q: vertigo, gold: [R42, "H81*"]}
+  - {q: 眩暈, gold: [R42, "H81*"]}
+  - {q: insomnia, gold: ["G47.0*", "F51.0*"]}
+  - {q: 失眠, gold: ["G47.0*", "F51.0*"]}
+  - {q: depression, gold: ["F32*", "F33*"]}
+  - {q: 憂鬱症, gold: ["F32*", "F33*"]}
+  - {q: anxiety disorder, gold: ["F41*"]}
+  - {q: 焦慮症, gold: ["F41*"]}
+  - {q: dementia, gold: ["F01*", "F02*", "F03*", "G30*"]}
+  - {q: 失智症, gold: ["F01*", "F02*", "F03*", "G30*"]}
+  - {q: parkinson disease, gold: ["G20*"]}
+  - {q: 巴金森氏症, gold: ["G20*"]}
+  - {q: cerebral infarction, gold: ["I63*"]}
+  - {q: 腦梗塞, gold: ["I63*"]}
+  - {q: stroke, gold: ["I63*"]}
+  - {q: 中風, gold: ["I63*", "I61*"], tag: colloquial}
+  - {q: intracerebral hemorrhage, gold: ["I61*"]}
+  - {q: myocardial infarction, gold: ["I21*"]}
+  - {q: heart attack, gold: ["I21*"]}
+  - {q: 心肌梗塞, gold: ["I21*"]}
+  - {q: atrial fibrillation, gold: ["I48*"]}
+  - {q: 心房顫動, gold: ["I48*"]}
+  - {q: heart failure, gold: ["I50*"]}
+  - {q: 心衰竭, gold: ["I50*"]}
+  - {q: CHF, gold: ["I50*"], tag: abbrev}
+  - {q: angina pectoris, gold: ["I20*"]}
+  - {q: 狹心症, gold: ["I20*"]}
+  - {q: coronary artery disease, gold: ["I25.1*"]}
+  - {q: 冠狀動脈疾病, gold: ["I25.1*"]}
+  - {q: deep vein thrombosis, gold: ["I82.4*", "I82.9*"]}
+  - {q: DVT, gold: ["I82*"], tag: abbrev}
+  - {q: pulmonary embolism, gold: ["I26*"]}
+  - {q: 肺栓塞, gold: ["I26*"]}
+  - {q: asthma, gold: ["J45*"]}
+  - {q: 氣喘, gold: ["J45*"]}
+  - {q: COPD, gold: ["J44*"], tag: abbrev}
+  - {q: 慢性阻塞性肺病, gold: ["J44*"]}
+  - {q: pneumonia, gold: ["J18*", "J12*", "J15*"]}
+  - {q: 肺炎, gold: ["J18*", "J12*", "J15*"]}
+  - {q: upper respiratory infection, gold: [J06.9]}
+  - {q: URI, gold: [J06.9], tag: abbrev}
+  - {q: 上呼吸道感染, gold: [J06.9]}
+  - {q: common cold, gold: [J00]}
+  - {q: 感冒, gold: [J00, J06.9], tag: colloquial}
+  - {q: influenza, gold: ["J09*", "J10*", "J11*"]}
+  - {q: 流行性感冒, gold: ["J09*", "J10*", "J11*"]}
+  - {q: acute bronchitis, gold: ["J20*"]}
+  - {q: 急性支氣管炎, gold: ["J20*"]}
+  - {q: sinusitis, gold: ["J01*", "J32*"]}
+  - {q: 鼻竇炎, gold: ["J01*", "J32*"]}
+  - {q: allergic rhinitis, gold: ["J30*"]}
+  - {q: 過敏性鼻炎, gold: ["J30*"]}
+  - {q: pharyngitis, gold: ["J02*"]}
+  - {q: tonsillitis, gold: ["J03*"]}
+  - {q: otitis media, gold: ["H65*", "H66*"]}
+  - {q: 中耳炎, gold: ["H65*", "H66*"]}
+  - {q: conjunctivitis, gold: ["H10*"]}
+  - {q: 結膜炎, gold: ["H10*"]}
+  - {q: cataract, gold: ["H25*", "H26*"]}
+  - {q: 白內障, gold: ["H25*", "H26*"]}
+  - {q: glaucoma, gold: ["H40*"]}
+  - {q: 青光眼, gold: ["H40*"]}
+  - {q: GERD, gold: ["K21*"], tag: abbrev}
+  - {q: gastroesophageal reflux, gold: ["K21*"]}
+  - {q: 胃食道逆流, gold: ["K21*"]}
+  - {q: gastric ulcer, gold: ["K25*"]}
+  - {q: 胃潰瘍, gold: ["K25*"]}
+  - {q: peptic ulcer, gold: ["K27*"]}
+  - {q: gastritis, gold: ["K29*"]}
+  - {q: 胃炎, gold: ["K29*"]}
+  - {q: constipation, gold: ["K59.0*"]}
+  - {q: 便秘, gold: ["K59.0*"]}
+  - {q: gastroenteritis, gold: [A09, "K52*"]}
+  - {q: 腸胃炎, gold: [A09, "K52*"]}
+  - {q: irritable bowel syndrome, gold: ["K58*"]}
+  - {q: 大腸激躁症, gold: ["K58*"]}
+  - {q: hemorrhoids, gold: ["K64*"]}
+  - {q: 痔瘡, gold: ["K64*"]}
+  - {q: appendicitis, gold: ["K35*", K36, K37]}
+  - {q: 闌尾炎, gold: ["K35*", K36, K37]}
+  - {q: gallstones, gold: ["K80*"]}
+  - {q: 膽結石, gold: ["K80*"]}
+  - {q: fatty liver, gold: [K76.0, "K70.0"]}
+  - {q: 脂肪肝, gold: [K76.0, "K70.0"]}
+  - {q: chronic hepatitis B, gold: [B18.1, B18.0]}
+  - {q: B型肝炎, gold: ["B16*", B18.0, B18.1, "B19.1*"]}
+  - {q: 慢性C型肝炎, gold: [B18.2]}
+  - {q: liver cirrhosis, gold: ["K74*", "K70.3*"]}
+  - {q: 肝硬化, gold: ["K74*", "K70.3*"]}
+  - {q: urinary tract infection, gold: [N39.0]}
+  - {q: 泌尿道感染, gold: [N39.0]}
+  - {q: UTI, gold: [N39.0], tag: abbrev}
+  - {q: cystitis, gold: ["N30*"]}
+  - {q: kidney stone, gold: [N20.0]}
+  - {q: 腎結石, gold: [N20.0]}
+  - {q: chronic kidney disease, gold: ["N18*"]}
+  - {q: 慢性腎臟病, gold: ["N18*"]}
+  - {q: CKD, gold: ["N18*"], tag: abbrev}
+  - {q: benign prostatic hyperplasia, gold: ["N40*"]}
+  - {q: 攝護腺肥大, gold: ["N40*"]}
+  - {q: iron deficiency anemia, gold: ["D50*"]}
+  - {q: 缺鐵性貧血, gold: ["D50*"]}
+  - {q: hyperthyroidism, gold: ["E05*"]}
+  - {q: 甲狀腺機能亢進, gold: ["E05*"]}
+  - {q: hypothyroidism, gold: ["E03*"]}
+  - {q: 甲狀腺機能低下, gold: ["E03*"]}
+  - {q: obesity, gold: ["E66*"]}
+  - {q: 肥胖, gold: ["E66*"]}
+  - {q: lung cancer, gold: ["C34*"]}
+  - {q: 肺癌, gold: ["C34*"]}
+  - {q: breast cancer, gold: ["C50*"]}
+  - {q: 乳癌, gold: ["C50*"]}
+  - {q: colon cancer, gold: ["C18*"]}
+  - {q: 大腸癌, gold: ["C18*", "C19*", "C20*"]}
+  - {q: hepatocellular carcinoma, gold: ["C22.0"]}
+  - {q: 肝癌, gold: ["C22*"]}
+  - {q: gastric cancer, gold: ["C16*"]}
+  - {q: prostate cancer, gold: [C61]}
+  - {q: cervical cancer, gold: ["C53*"]}
+  - {q: thyroid cancer, gold: [C73]}
+  - {q: fever, gold: ["R50*"]}
+  - {q: 發燒, gold: ["R50*"]}
+  - {q: cough, gold: ["R05*"]}
+  - {q: 咳嗽, gold: ["R05*"]}
+  - {q: chest pain, gold: ["R07*"]}
+  - {q: 胸痛, gold: ["R07*"]}
+  - {q: abdominal pain, gold: ["R10*"]}
+  - {q: 腹痛, gold: ["R10*"]}
+  - {q: syncope, gold: [R55]}
+  - {q: 暈厥, gold: [R55]}
+  - {q: COVID-19, gold: [U07.1]}
+  - {q: 新冠肺炎, gold: [U07.1], tag: colloquial}
+  - {q: anaphylaxis, gold: ["T78.0*", "T78.2*", "T88.6*"]}
+  - {q: 過敏性休克, gold: ["T78.0*", "T78.2*", "T88.6*"]}
+  - {q: femoral neck fracture, gold: ["S72.0*"]}
+  - {q: ankle sprain, gold: ["S93.4*"]}
+  - {q: 腳踝扭傷, gold: ["S93.4*"]}
+  - {q: vaccination, gold: [Z23]}
+  - {q: 懷孕, gold: ["Z33*", "Z34*"]}
+  - {q: diabetes kidney, gold: [E11.21, E11.22, E11.29, E10.21], tag: order}
+  - {q: hypertensoin, gold: [I10], tag: typo}
+  - {q: pnuemonia, gold: ["J18*", "J12*", "J15*"], tag: typo}
