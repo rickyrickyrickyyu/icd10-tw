@@ -100,6 +100,7 @@ if (flag('--json')) { console.log(JSON.stringify({ scope, ...res }, null, 1)); p
 const d = res.details;
 const bits = [];
 if (d.corrections.length) bits.push(c('33', `拼字修正 ${d.corrections.map(([a, b]) => `${a}→${b}`).join(' ')}`));
+if (d.expansions?.length) bits.push(c('34', `縮寫展開 ${d.expansions.map(([a, b]) => `${a.toUpperCase()}→${b}`).join(' ')}`));
 for (const m of d.mapped) bits.push(`「${m.text}」→ 主題 ${m.concepts.slice(0, 3).map((x) => x.code).join('/')}`);
 console.log(c('2', `${res.total} 筆｜${scope === 'derm' ? '皮膚科' : scope === 'pcs' ? 'PCS' : '全部 CM'}${bits.length ? `｜${bits.join('｜')}` : ''}`));
 for (const it of res.items.slice(0, 8)) {

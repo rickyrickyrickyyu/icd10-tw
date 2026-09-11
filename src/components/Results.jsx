@@ -114,7 +114,7 @@ function SearchDetails({ d, res, explode, setExplode, scope }) {
   }
   for (const f of d.free) parts.push(<span key={`f-${f}`}>「{f}」[全文]</span>);
   return (
-    <details className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" open={d.mapped.length > 0 || d.corrections.length > 0}>
+    <details className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" open={d.mapped.length > 0 || d.corrections.length > 0 || d.expansions?.length > 0}>
       <summary className="cursor-pointer select-none text-slate-600">
         {res.total.toLocaleString()} 筆｜{res.ms} ms｜{scope === 'derm' ? '皮膚科' : scope === 'pcs' ? 'PCS' : '全部 CM'}
         <span className="ml-2 text-slate-400">Search details</span>
@@ -122,6 +122,9 @@ function SearchDetails({ d, res, explode, setExplode, scope }) {
       <div className="mt-2 space-y-1.5">
         {d.corrections.length > 0 && (
           <p className="text-amber-800">已修正拼字：{d.corrections.map(([a, b]) => `${a} → ${b}`).join('、')}</p>
+        )}
+        {d.expansions?.length > 0 && (
+          <p className="text-sky-800">縮寫展開：{d.expansions.map(([a, b]) => `${a.toUpperCase()} → ${b}`).join('、')}</p>
         )}
         {parts.length > 0 && <p className="flex flex-wrap gap-x-2 gap-y-1">{parts.reduce((acc, p, i) => (i ? [...acc, <span key={`and-${i}`} className="text-slate-400">AND</span>, p] : [p]), [])}</p>}
         {d.whole && <p className="text-xs text-slate-500">整句命中入口詞：主題與其下層碼排在最前。</p>}

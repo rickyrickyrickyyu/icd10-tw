@@ -240,6 +240,7 @@ export class Engine {
   /** 整句拼字修正：英文詞 stem 後不在索引裡才修，中文與數字不動。 */
   correctText(text) {
     const corrections = [];
+    const expansions = [];                      // 縮寫展開與拼字修正分開記，畫面上標示不同
     const words = norm(text).split(' ');
     // ★ 多字查詢時把已核可縮寫展開成全名（「BCC nose」→ basal cell carcinoma nose）：
     //   縮寫本身只對到一個碼（C44.91），和部位詞 AND 起來會落空，v11 線上實測 C44.311 只排第二。
@@ -247,12 +248,12 @@ export class Engine {
     const multi = words.filter(Boolean).length > 1;
     const out = words.map((w) => {
       if (!w || CJK.test(w)) return w;
-      if (multi && this.abbr.has(w)) { corrections.push([w, this.abbr.get(w)]); return this.abbr.get(w); }
+      if (multi && this.abbr.has(w)) { expansions.push([w, this.abbr.get(w)]); return this.abbr.get(w); }
       const fix = this.correct(stem(w), w);
       if (fix) { corrections.push([w, fix]); return fix; }
       return w;
     });
-    return { text: out.join(' '), corrections };
+    return { text: out.join(' '), corrections, expansions };
   }
 
   prefixExpand(tok) {
@@ -367,7 +368,7 @@ export class Engine {
       if (!cur || s > cur.s) score.set(d, { s, why, ...extra, ...(cur?.def ? { def: true } : {}) });
       else if (extra.def) cur.def = true;
     };
-    const details = { mapped: [], free: [], corrections: [], codes: q.codes, whole: false };
+    const details = { mapped: [], free: [], corrections: [], expansions: [], codes: q.codes, whole: false };
 
     for (const c of q.codes) {
       if (c.kind === 'cm' || c.kind === 'pcs') {
@@ -385,8 +386,9 @@ export class Engine {
     if (!q.text || q.flags.code) return this.finish(score, details, q.text, limit);
 
     // 0. 拼字修正在 ATM 之前
-    const { text, corrections } = this.correctText(q.text);
+    const { text, corrections, expansions } = this.correctText(q.text);
     details.corrections = corrections;
+    details.expansions = expansions;
 
     // 2–3. ATM
     const { whole, segs } = this.segments(text);
