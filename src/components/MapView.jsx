@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { load, loadMap14, loadMap9 } from '../hooks/useData.js';
+import { loadMap14, loadMap9, namesFor } from '../hooks/useData.js';
 import { href } from '../lib/routes.js';
 
 // GEM 五碼旗標：approximate / no map / combination / scenario / choice list
@@ -19,9 +19,12 @@ export default function MapView({ kind, code }) {
     const pcs = /^[0-9A-HJ-NP-Z]{7}$/.test(code) || (kind === 'map9' && /^\d{2}\.\d/.test(code));
     const k = pcs ? 'pcs' : 'cm';
     const f = kind === 'map14' ? loadMap14(k, code) : loadMap9(k, code);
-    Promise.all([f, load(pcs ? 'pcs.json' : 'cm.json')]).then(([m, rows]) => {
-      const names = new Map(rows.rows.map((r) => [r[0], r[1]]));
-      if (alive) setSt({ loading: false, data: m[code] ?? null, names, pcs });
+    f.then(async (m) => {
+      const data = m[code] ?? null;
+      const targets = data ? (kind === 'map9' ? data.t : data) : [];
+      const rows = await namesFor(targets.map((t) => t[0]), pcs);     // 只載目標碼所在的分片
+      const names = new Map([...rows].map(([c, r]) => [c, r[1]]));
+      if (alive) setSt({ loading: false, data, names, pcs });
     }).catch((e) => alive && setSt({ loading: false, error: e.message }));
     return () => { alive = false; };
   }, [kind, code]);

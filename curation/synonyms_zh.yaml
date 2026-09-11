@@ -50,3 +50,5 @@ items:
   - {term: 異位性濕疹, codes: [L20.9], note: 異位性皮膚炎, approved: true}
   - {term: 慢性蕁麻疹, codes: [L50.8, L50.1], note: 慢性自發性蕁麻疹多編 L50.1（特發性）或 L50.8, approved: true}
   - {term: 白斑症, codes: [L80], note: 皮膚科語境＝白斑（vitiligo）；黏膜白斑症另有各器官碼, approved: true}
+  # ── v11：使用者授權自我迭代後由 Claude 補（2026-09-11），請抽查 ──
+  - {term: 勃起功能障礙, codes: [N52.9], note: 官方譯名「男性勃起障礙」；心因性另編 F52.21, approved: true, added_by: claude-v11}

@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
-import { load } from '../hooks/useData.js';
+import { load, namesFor } from '../hooks/useData.js';
 import { href } from '../lib/routes.js';
 
 /** 重大傷病：類別清單（無參數）或某一類的所有 2023 碼。 */
 export default function CatView({ n }) {
   const [st, setSt] = useState(null);
   useEffect(() => {
-    Promise.all([load('cat.json'), load('cm.json')]).then(([cat, rows]) => {
-      setSt({ cat, names: new Map(rows.rows.map((r) => [r[0], r[1]])) });
+    load('cat.json').then(async (cat) => {
+      const k = Number(n);
+      // 類別清單頁不需要名稱；類別頁只載該類碼所在的首字母分片
+      const codes = k ? Object.entries(cat.codes).filter(([, a]) => a.some(([c]) => c === k)).map(([c]) => c) : [];
+      const rows = await namesFor(codes);
+      setSt({ cat, names: new Map([...rows].map(([c, r]) => [c, r[1]])) });
     }).catch(() => setSt({ error: true }));
-  }, []);
+  }, [n]);
   if (!st) return <p className="text-slate-500">載入中…</p>;
   if (st.error) return <p className="text-red-700">載入失敗</p>;
   const { cat, names } = st;

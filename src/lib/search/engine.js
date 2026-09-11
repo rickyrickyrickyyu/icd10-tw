@@ -33,6 +33,8 @@ export const CONFIG = {
   headerDemote: 0.97, // 標題碼（USE=0，不可申報）分數打折：同分時可申報的子碼排前面
   fuzzyMinLen: 4,     // stem 後長度；v2 為 5，「hievs」stem 成 4 字元就不修了
   gapWeight: 0.5,     // 中文跳一字字對的權重（0 = 關閉；v6 加入）
+  manifestDemote: 0.9, // 「in diseases classified elsewhere」表現碼（v11）
+  cdcDefBonus: 1.08,  // 整句命中時，CDC 字母索引直接給的碼（真正的預設碼）加分（v11）
   prefixMin: 3,
   limit: 60,
 };
@@ -78,6 +80,7 @@ export class Engine {
     this.sortedCodes = order.map((i) => this.codes[i]);
     this.srcNames = vocab?.src ?? [];
     this.defaults = vocab?.def ?? {};           // 標題碼 → 預設可申報子碼（build_vocab 產生）
+    this.cdcIdx = new Set(['cdc-idx', 'cdc-see'].map((n) => this.srcNames.indexOf(n)).filter((i) => i >= 0));
     const ex = opts.exclude;
     this.vt = (vocab?.t ?? []).filter((v) => !(ex && ex(v)));     // 本索引實際使用的入口詞
     const t0 = Date.now();
@@ -417,7 +420,10 @@ export class Engine {
         // ★ 只有可申報碼能標 ★預設碼；命中的是標題碼時，把它的預設子碼帶到緊接其後。
         //   ×0.96 < 標題碼的 ×0.97：v7 用同分讓子碼搶過標題碼，保留集 Hit@1 掉 6 點（正解常是標題碼本身）。
         const billable = this.rows[d][3] === 1;
-        put(d, s, { kind: 'atm', seg: segs[0].text }, { atm: true, def: node && billable && seg0Def(segs[0], this.codes[d]) });
+        // ★ 預設碼＝CDC 字母索引（含 see 解析）直接給這個詞的完整碼；沒有這種來源時才退回「官方名稱完全相同」。
+        //   v10 以前任何來源都算，Tabular 的 inclusion term 也會讓表現碼 N16 標 ★。
+        const isDef = node && billable && seg0Def(segs[0], this.codes[d], this.cdcIdx);
+        put(d, isDef ? s * CONFIG.cdcDefBonus : s, { kind: 'atm', seg: segs[0].text }, { atm: true, def: isDef });
         if (node && !billable) {
           const dc = this.id.get(this.defaults[this.codes[d]]);
           if (dc !== undefined) put(dc, s * 0.96, { kind: 'atm', seg: segs[0].text }, { atm: true, def: true });
@@ -463,7 +469,15 @@ export class Engine {
   }
 
   finish(score, details, text, limit) {
-    const adj = (d, v) => (this.rows[d][3] === 0 && v.why.kind !== 'code' ? v.s * CONFIG.headerDemote : v.s);
+    // 標題碼 ×0.97（同分時可申報碼優先）；「歸類於他處疾病」的表現碼 ×0.9 —— 依撰碼規則
+    // 它們不能當主診斷（要先編原發疾病），v10 查 pyelonephritis 曾讓 N16 排第一。
+    const adj = (d, v) => {
+      if (v.why.kind === 'code') return v.s;
+      let s = v.s;
+      if (this.rows[d][3] === 0) s *= CONFIG.headerDemote;
+      if (/classified elsewhere/i.test(this.rows[d][2])) s *= CONFIG.manifestDemote;
+      return s;
+    };
     const items = [...score.entries()]
       .map(([d, v]) => [d, v, adj(d, v)])
       .sort((a, b) => b[2] - a[2] || this.codes[a[0]].localeCompare(this.codes[b[0]]))
@@ -497,6 +511,8 @@ function dedupe(concepts) {
   return concepts.filter((c) => (seen.has(c.code) ? false : (seen.add(c.code), true)));
 }
 
-function seg0Def(seg, code) {
-  return seg.mapped.some(([c, , f]) => c === code && !(f & 1));
+function seg0Def(seg, code, cdcIdx) {
+  const direct = seg.mapped.filter(([, s, f]) => cdcIdx.has(s) && !(f & 1));
+  if (direct.length) return direct.some(([c]) => c === code);
+  return seg.mapped.some(([c, s, f]) => c === code && s < 0 && !(f & 1));   // 退回：官方名稱完全相同
 }

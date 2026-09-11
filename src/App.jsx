@@ -49,13 +49,16 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-start justify-between gap-2">
             <a href="#/" className="font-semibold text-brand-900 whitespace-nowrap">ICD-10 健保診斷碼查詢</a>
-            <nav className="flex gap-3 text-sm text-slate-600">
-              <a href="#/fav" className="hover:text-brand-700">常用碼</a>
-              <a href="#/changes" className="hover:text-brand-700">本版異動</a>
-              <a href="#/about" className="hover:text-brand-700">關於</a>
-            </nav>
+            <div className="flex flex-col items-end gap-0.5">
+              <nav className="flex gap-3 text-sm text-slate-600">
+                <a href="#/fav" className="hover:text-brand-700">常用碼</a>
+                <a href="#/changes" className="hover:text-brand-700">本版異動</a>
+                <a href="#/about" className="hover:text-brand-700">關於</a>
+              </nav>
+              <span className="text-[11px] text-slate-400 leading-none" data-testid="author">by M116 RickyYu</span>
+            </div>
           </div>
           <SearchBar core={core} initial={route.view === 'search' ? route.q : ''} />
           <div className="flex items-center gap-1 text-xs" role="tablist" aria-label="查詢範圍">

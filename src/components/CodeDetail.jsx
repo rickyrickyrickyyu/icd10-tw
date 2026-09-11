@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { load, loadNodes } from '../hooks/useData.js';
+import { load, loadDetail, loadNodes } from '../hooks/useData.js';
 import { href } from '../lib/routes.js';
 import { getPrefs, toggleFav } from '../lib/storage.js';
 import { cmCode } from '../lib/search/query.js';
@@ -19,10 +19,10 @@ export default function CodeDetail({ code: raw }) {
     setSt({ loading: true });
     setFav(getPrefs().fav.includes(code));
     (async () => {
-      const [rows, vocab, tree, nodes, cat] = await Promise.all([
-        load('cm.json'), load('vocab_cm.json'), load('tree.json'), loadNodes(code), load('cat.json'),
+      const [vocab, tree, nodes, cat] = await Promise.all([
+        loadDetail(code), load('tree.json'), loadNodes(code), load('cat.json'),
       ]);
-      const all = rows.rows;
+      const all = vocab.rows;          // 同首字母的列：祖先、子孫都在裡面
       const i = all.findIndex((r) => r[0] === code);
       if (i < 0) { if (alive) setSt({ loading: false, missing: true }); return; }
       const have = new Set(all.map((r) => r[0]));

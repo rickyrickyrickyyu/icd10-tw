@@ -1,0 +1,198 @@
+# 跨科別疾病名稱（與 clinical_derm／general 不重複），用來「換一批沒調過參的題」反覆驗證。
+# 中英混合、官方譯名與台灣慣用說法都有。gold 由 run.mjs 核對存在於 2023 版；"X*" = X 開頭任一碼。
+# ⚠️ 由 Claude 草擬（2026-09-11），臨床判斷請抽查。
+items:
+  # 心臟血管
+  - {q: 高血壓性心臟病, gold: ["I11*"]}
+  - {q: hypertensive heart disease, gold: ["I11*"]}
+  - {q: systolic heart failure, gold: ["I50.2*"]}
+  - {q: 心律不整, gold: [I49.9, "I49*"]}
+  - {q: palpitations, gold: [R00.2]}
+  - {q: 心悸, gold: [R00.2]}
+  - {q: aortic stenosis, gold: [I35.0]}
+  - {q: 主動脈瓣狹窄, gold: [I35.0, "Q23.0"]}
+  - {q: mitral valve prolapse, gold: [I34.1]}
+  - {q: 二尖瓣脫垂, gold: [I34.1]}
+  - {q: peripheral artery disease, gold: [I73.9, "I70.2*"]}
+  - {q: 靜脈曲張, gold: ["I83*"]}
+  # 胸腔
+  - {q: bronchiectasis, gold: ["J47*"]}
+  - {q: 支氣管擴張症, gold: ["J47*"]}
+  - {q: pulmonary tuberculosis, gold: [A15.0]}
+  - {q: 肺結核, gold: [A15.0, "A15*"]}
+  - {q: obstructive sleep apnea, gold: ["G47.33"]}
+  - {q: 睡眠呼吸中止症, gold: ["G47.3*"]}
+  - {q: pneumothorax, gold: ["J93*"]}
+  - {q: 氣胸, gold: ["J93*"]}
+  - {q: pleural effusion, gold: [J90, "J91*"]}
+  - {q: 肋膜積水, gold: [J90, "J91*"]}
+  - {q: idiopathic pulmonary fibrosis, gold: [J84.112]}
+  # 消化
+  - {q: acute pancreatitis, gold: ["K85*"]}
+  - {q: 急性胰臟炎, gold: ["K85*"]}
+  - {q: cholecystitis, gold: ["K81*"]}
+  - {q: 膽囊炎, gold: ["K81*"]}
+  - {q: crohn disease, gold: ["K50*"]}
+  - {q: 克隆氏症, gold: ["K50*"]}
+  - {q: ulcerative colitis, gold: ["K51*"]}
+  - {q: 潰瘍性結腸炎, gold: ["K51*"]}
+  - {q: reflux esophagitis, gold: ["K21.0*", "K20*"]}
+  - {q: intestinal obstruction, gold: ["K56*"]}
+  - {q: 腸阻塞, gold: ["K56*"]}
+  - {q: inguinal hernia, gold: ["K40*"]}
+  - {q: 腹股溝疝氣, gold: ["K40*"]}
+  - {q: anal fissure, gold: [K60.0, K60.1, K60.2]}
+  - {q: 肛裂, gold: [K60.0, K60.1, K60.2]}
+  - {q: colon polyp, gold: [K63.5, "D12*"]}
+  # 腎泌尿
+  - {q: pyelonephritis, gold: [N10, "N11*", N12]}
+  - {q: 腎盂腎炎, gold: [N10, "N11*", N12]}
+  - {q: acute kidney injury, gold: ["N17*"]}
+  - {q: 急性腎損傷, gold: ["N17*"]}
+  - {q: nephrotic syndrome, gold: ["N04*"]}
+  - {q: 腎病症候群, gold: ["N04*"]}
+  - {q: prostatitis, gold: ["N41*"]}
+  - {q: hydrocele, gold: ["N43*", "P83.5"]}
+  - {q: erectile dysfunction, gold: ["N52*"]}
+  - {q: 勃起功能障礙, gold: ["N52*"]}
+  # 內分泌代謝
+  - {q: thyroid nodule, gold: [E04.1]}
+  - {q: 甲狀腺結節, gold: [E04.1, "E04*"]}
+  - {q: cushing syndrome, gold: ["E24*"]}
+  - {q: addison disease, gold: [E27.1]}
+  - {q: polycystic ovary syndrome, gold: [E28.2]}
+  - {q: 多囊性卵巢症候群, gold: [E28.2]}
+  - {q: hypoglycemia, gold: [E16.2, "E16*"]}
+  - {q: 低血糖, gold: [E16.2, "E16*"]}
+  - {q: vitamin D deficiency, gold: ["E55*"]}
+  # 神經
+  - {q: epilepsy, gold: ["G40*"]}
+  - {q: 癲癇, gold: ["G40*"]}
+  - {q: trigeminal neuralgia, gold: [G50.0]}
+  - {q: 三叉神經痛, gold: [G50.0]}
+  - {q: bell palsy, gold: [G51.0]}
+  - {q: 顏面神經麻痺, gold: [G51.0, "G51*"]}
+  - {q: multiple sclerosis, gold: [G35]}
+  - {q: 多發性硬化症, gold: [G35]}
+  - {q: myasthenia gravis, gold: ["G70.0*"]}
+  - {q: 重症肌無力, gold: ["G70.0*"]}
+  - {q: concussion, gold: ["S06.0*"]}
+  - {q: 腦震盪, gold: ["S06.0*"]}
+  # 精神
+  - {q: schizophrenia, gold: ["F20*"]}
+  - {q: 思覺失調症, gold: ["F20*"]}
+  - {q: bipolar disorder, gold: ["F31*"]}
+  - {q: 雙極性情感疾患, gold: ["F31*"]}
+  - {q: panic disorder, gold: [F41.0]}
+  - {q: 恐慌症, gold: [F41.0]}
+  - {q: obsessive compulsive disorder, gold: ["F42*"]}
+  - {q: 強迫症, gold: ["F42*"]}
+  - {q: ADHD, gold: ["F90*"], tag: abbrev}
+  - {q: 注意力不足過動症, gold: ["F90*"]}
+  - {q: autism, gold: [F84.0]}
+  - {q: 自閉症, gold: [F84.0]}
+  - {q: PTSD, gold: ["F43.1*"], tag: abbrev}
+  - {q: 創傷後壓力症候群, gold: ["F43.1*"]}
+  - {q: anorexia nervosa, gold: ["F50.0*"]}
+  - {q: alcohol dependence, gold: ["F10.2*"]}
+  # 婦產
+  - {q: endometriosis, gold: ["N80*"]}
+  - {q: 子宮內膜異位症, gold: ["N80*"]}
+  - {q: uterine fibroids, gold: ["D25*"]}
+  - {q: 子宮肌瘤, gold: ["D25*"]}
+  - {q: gestational diabetes, gold: ["O24.4*"]}
+  - {q: 妊娠糖尿病, gold: ["O24.4*"]}
+  - {q: preeclampsia, gold: ["O14*"]}
+  - {q: 子癇前症, gold: ["O14*"]}
+  - {q: ectopic pregnancy, gold: ["O00*"]}
+  - {q: 子宮外孕, gold: ["O00*"]}
+  - {q: dysmenorrhea, gold: [N94.6, N94.4, N94.5]}
+  - {q: 經痛, gold: [N94.6, N94.4, N94.5], tag: colloquial}
+  - {q: vaginal candidiasis, gold: ["B37.3*"]}
+  - {q: menopausal syndrome, gold: [N95.1]}
+  # 兒科
+  - {q: febrile seizure, gold: ["R56.0*"]}
+  # 官方中文名 R56.0（熱性痙攣）與 T67.2（中暑熱痙攣 heat cramp）都叫「熱痙攣」—— 題目本身歧義，兩者皆算對
+  - {q: 熱痙攣, gold: ["R56.0*", "T67.2*"]}
+  - {q: neonatal jaundice, gold: ["P59*"]}
+  - {q: 新生兒黃疸, gold: ["P59*"]}
+  - {q: intussusception, gold: [K56.1]}
+  - {q: kawasaki disease, gold: [M30.3]}
+  - {q: 川崎病, gold: [M30.3]}
+  - {q: croup, gold: [J05.0]}
+  - {q: measles, gold: ["B05*"]}
+  - {q: 麻疹, gold: ["B05*"]}
+  - {q: mumps, gold: ["B26*"]}
+  - {q: pertussis, gold: ["A37*"]}
+  - {q: 百日咳, gold: ["A37*"]}
+  # 眼科
+  - {q: macular degeneration, gold: ["H35.3*"]}
+  - {q: 黃斑部病變, gold: ["H35.3*"]}
+  - {q: dry eye syndrome, gold: ["H04.12*"]}
+  - {q: 乾眼症, gold: ["H04.12*"]}
+  - {q: myopia, gold: ["H52.1*"]}
+  - {q: 近視, gold: ["H52.1*"]}
+  - {q: retinal detachment, gold: ["H33*"]}
+  - {q: 視網膜剝離, gold: ["H33*"]}
+  # 耳鼻喉
+  - {q: tinnitus, gold: ["H93.1*"]}
+  - {q: 耳鳴, gold: ["H93.1*"]}
+  - {q: sudden hearing loss, gold: ["H91.2*"]}
+  - {q: 突發性耳聾, gold: ["H91.2*"]}
+  - {q: meniere disease, gold: ["H81.0*"]}
+  - {q: 梅尼爾氏症, gold: ["H81.0*"]}
+  - {q: deviated nasal septum, gold: [J34.2]}
+  - {q: epistaxis, gold: [R04.0]}
+  - {q: 流鼻血, gold: [R04.0], tag: colloquial}
+  - {q: vocal cord nodules, gold: [J38.2]}
+  # 骨骼肌肉
+  - {q: ankylosing spondylitis, gold: ["M45*"]}
+  - {q: 僵直性脊椎炎, gold: ["M45*"]}
+  - {q: 類風濕性關節炎, gold: ["M05*", "M06*"]}
+  - {q: fibromyalgia, gold: [M79.7]}
+  - {q: rotator cuff tear, gold: ["M75.1*", "S46.0*"]}
+  - {q: plantar fasciitis, gold: [M72.2]}
+  - {q: 足底筋膜炎, gold: [M72.2]}
+  - {q: lumbar disc herniation, gold: ["M51.2*", "M51.1*"]}
+  - {q: 腰椎椎間盤突出, gold: ["M51.2*", "M51.1*"]}
+  - {q: osteomyelitis, gold: ["M86*"]}
+  # 血液腫瘤
+  - {q: 地中海型貧血, gold: ["D56*"]}
+  - {q: thrombocytopenia, gold: [D69.6, "D69*"]}
+  - {q: 血小板低下, gold: [D69.6, "D69*"]}
+  - {q: multiple myeloma, gold: ["C90.0*"]}
+  - {q: 多發性骨髓瘤, gold: ["C90.0*"]}
+  - {q: pancreatic cancer, gold: ["C25*"]}
+  - {q: 胰臟癌, gold: ["C25*"]}
+  - {q: bladder cancer, gold: ["C67*"]}
+  - {q: 膀胱癌, gold: ["C67*"]}
+  - {q: ovarian cancer, gold: ["C56*"]}
+  - {q: 卵巢癌, gold: ["C56*"]}
+  - {q: nasopharyngeal carcinoma, gold: ["C11*"]}
+  - {q: 鼻咽癌, gold: ["C11*"]}
+  # 感染
+  - {q: sepsis, gold: ["A41*"]}
+  - {q: 敗血症, gold: ["A41*"]}
+  - {q: dengue fever, gold: [A90, "A91*"]}
+  - {q: 登革熱, gold: [A90, "A91*"]}
+  - {q: scrub typhus, gold: [A75.3]}
+  - {q: 恙蟲病, gold: [A75.3]}
+  - {q: HIV disease, gold: [B20]}
+  - {q: mpox, gold: [B04]}
+  - {q: pneumococcal pneumonia, gold: [J13]}
+  - {q: pinworm, gold: [B80]}
+  # 傷害中毒
+  - {q: dog bite, gold: ["W54.0*"]}
+  - {q: 狗咬傷, gold: ["W54.0*"]}
+  - {q: heat stroke, gold: ["T67.0*"]}
+  - {q: 中暑, gold: ["T67*"]}
+  - {q: carbon monoxide poisoning, gold: ["T58*"]}
+  - {q: 一氧化碳中毒, gold: ["T58*"]}
+  - {q: bee sting, gold: ["T63.44*"]}
+  # 牙科口腔
+  - {q: periodontitis, gold: ["K05*"]}
+  - {q: 牙周病, gold: ["K05*"]}
+  - {q: temporomandibular joint disorder, gold: ["M26.6*"]}
+  - {q: aphthous ulcer, gold: [K12.0]}
+  - {q: 口腔潰瘍, gold: [K12.0, "K12*"]}
+  - {q: nicotine dependence, gold: ["F17.2*"]}

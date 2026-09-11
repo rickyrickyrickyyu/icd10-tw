@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { load } from '../hooks/useData.js';
+import { namesFor } from '../hooks/useData.js';
 import { getPrefs, toggleFav } from '../lib/storage.js';
 import { href } from '../lib/routes.js';
 
 export default function Favorites() {
   const [fav, setFav] = useState(() => getPrefs().fav);
   const [names, setNames] = useState(null);
-  useEffect(() => { load('cm.json').then((r) => setNames(new Map(r.rows.map((x) => [x[0], x])))).catch(() => setNames(new Map())); }, []);
+  useEffect(() => { namesFor(getPrefs().fav).then(setNames).catch(() => setNames(new Map())); }, []);
   const copyAll = () => navigator.clipboard?.writeText(fav.map((c) => `${c}\t${names?.get(c)?.[1] ?? ''}`).join('\n')).catch(() => {});
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4">

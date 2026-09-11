@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { load } from '../hooks/useData.js';
+import { load, loadPcsDetail } from '../hooks/useData.js';
 import { href } from '../lib/routes.js';
 import { ST_LABEL } from './labels.js';
 
@@ -8,7 +8,7 @@ export default function PcsDetail({ code }) {
   const [st, setSt] = useState({ loading: true });
   useEffect(() => {
     let alive = true;
-    Promise.all([load('pcs.json'), load('tree.json')]).then(([rows, tree]) => {
+    Promise.all([loadPcsDetail(code), load('tree.json')]).then(([rows, tree]) => {
       const r = rows.rows.find((x) => x[0] === code);
       const same = rows.rows.filter((x) => x[0] !== code && x[0].startsWith(code.slice(0, 4))).slice(0, 80);
       if (alive) setSt({ loading: false, r, same, section: tree.pcs?.[code[0]] });

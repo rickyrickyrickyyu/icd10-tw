@@ -38,7 +38,8 @@ def main() -> int:
     if dist.exists() and get("app_fingerprint") and get("app_fingerprint") != app_fingerprint(dist):
         print("❌ 離線包前端指紋與目前建置不符 → make offline")
         return 1
-    expect = sum(1 for _ in PUBLIC.rglob("*.json"))
+    expect = sum(1 for p in PUBLIC.rglob("*.json")
+                 if not p.relative_to(PUBLIC).as_posix().startswith(("detail/", "pdetail/")))
     if get("embedded_files") and int(get("embedded_files")) != expect:
         print(f"❌ 離線包收錄 {get('embedded_files')} 檔，public/data 有 {expect} 檔 → collect() 漏了")
         return 1

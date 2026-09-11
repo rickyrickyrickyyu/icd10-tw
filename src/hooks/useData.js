@@ -53,6 +53,38 @@ export const loadMap14 = (kind, code) => load(`map14/${kind}/${shardKey(code)}.j
 export const loadMap9 = (kind, code) => load(`map9/${kind}/${shardKey(code)}.json`).catch(() => ({}));
 
 /**
+ * 代碼詳細頁資料：同首字母的列與入口詞（detail/<字母>.json）。
+ * ★ 離線包不內嵌這些分片（資料已全在 cm.json／vocab_cm.json 裡，重複內嵌只會讓檔案變大），
+ *   離線時改從全庫切出同一個形狀。
+ */
+export async function loadDetail(code) {
+  const k = shardKey(code);
+  if (EMBEDDED && EMBEDDED[`detail/${k}.json`] === undefined) {
+    const [rows, v] = await Promise.all([load('cm.json'), load('vocab_cm.json')]);
+    return { rows: rows.rows.filter((r) => shardKey(r[0]) === k), src: v.src, t: v.t.filter((t) => shardKey(t[1]) === k) };
+  }
+  return load(`detail/${k}.json`);
+}
+
+export async function loadPcsDetail(code) {
+  const k = shardKey(code);
+  if (EMBEDDED && EMBEDDED[`pdetail/${k}.json`] === undefined) {
+    const rows = await load('pcs.json');
+    return { rows: rows.rows.filter((r) => shardKey(r[0]) === k) };
+  }
+  return load(`pdetail/${k}.json`);
+}
+
+/** 一批代碼 → Map(code → 列)；只載用得到的首字母分片。 */
+export async function namesFor(codes, pcs = false) {
+  const keys = [...new Set(codes.map(shardKey))];
+  const shards = await Promise.all(keys.map((k) => (pcs ? loadPcsDetail(k) : loadDetail(k)).catch(() => ({ rows: [] }))));
+  const out = new Map();
+  for (const s of shards) for (const r of s.rows) out.set(r[0], r);
+  return out;
+}
+
+/**
  * 首載：meta + 皮膚科子集（約 180 KB gz）並立刻建索引；
  * 全庫（CM 約 2.7 MB gz）與 PCS 等使用者切換範圍才載。
  */

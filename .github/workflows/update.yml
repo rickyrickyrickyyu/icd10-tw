@@ -38,6 +38,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # ★ runner（Ubuntu 24.04）的系統 Python 是 externally-managed，`uv pip install --system`
+      #   會被拒（首次上線那次 update 就死在這一步）。先用 setup-python 裝一個自己的。
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: astral-sh/setup-uv@v5
       - name: Python 依賴
         run: uv pip install --system pyyaml

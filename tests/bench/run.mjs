@@ -106,6 +106,7 @@ function main() {
   const sets = {
     clinical_derm: loadItems('clinical_derm.yaml'),
     general: loadItems('general.yaml'),
+    diverse: loadItems('diverse.yaml'),        // 跨科別、未拿來調參的新題（v11 起）
     index_heldout: sample(held.filter((x) => x.src === 'cdc-idx' || x.src === 'cdc-see'), 1500, 'i')
       .map((x) => ({ q: x.q, gold: goldOf(x) })),
     zh_heldout: sample(held.filter((x) => x.src === 'zh14' || x.src === 'zh9'), 1000, 'z')

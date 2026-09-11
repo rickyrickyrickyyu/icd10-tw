@@ -95,6 +95,22 @@ def main() -> int:
                         "vocab": {"src": vcm["src"], "t": [t for t in vcm["t"] if t[1] in keep],
                                   "def": {h: c for h, c in (vcm.get("def") or {}).items() if h in keep and c in keep}}})
 
+    # ★ 詳細頁分片（依首字母）：代碼頁原本要載 cm.json＋vocab_cm.json（原始 24 MB、gz 2.7 MB），
+    #   線上首次開 #/c/L40.0 實測 vocab_cm.json 就花 56 秒。同一碼的祖先、子孫、入口詞都在同首字母內。
+    rows_by = defaultdict(list)
+    for r in cm_rows:
+        rows_by[shard_key(r[0])].append(r)
+    voc_by = defaultdict(list)
+    for t in vcm["t"]:
+        voc_by[shard_key(t[1])].append(t)
+    for k, rs in rows_by.items():
+        write(f"detail/{k}.json", {"rows": rs, "src": vcm["src"], "t": voc_by.get(k, [])})
+    prow_by = defaultdict(list)
+    for r in pcs_rows:
+        prow_by[shard_key(r[0])].append(r)
+    for k, rs in prow_by.items():
+        write(f"pdetail/{k}.json", {"rows": rs})
+
     tree["pcs"] = chapters["pcs"]
     write("tree.json", tree)
     write("mesh.json", mesh)

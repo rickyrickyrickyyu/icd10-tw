@@ -35,6 +35,7 @@ NAME = f"icd10-tw-offline-{STAMP}.html"
 
 # 防毒／注入紅旗：單獨出現就拒絕輸出。atob 本身合法（解內嵌資料），只禁止與動態執行同時出現。
 _AV_FLAGS = ("eval(", "new Function(", "document.write(", "<iframe")
+OFFLINE_SKIP = ("detail/", "pdetail/")
 
 
 def _embed(obj) -> str:
@@ -49,6 +50,9 @@ def collect() -> tuple[dict, int]:
     raw_total = 0
     for p in sorted(PUBLIC.rglob("*.json")):
         rel = p.relative_to(PUBLIC).as_posix()
+        # 詳細頁分片是線上版省流量用的；離線版資料全在本機，前端會改從全庫切（useData.loadDetail）
+        if rel.startswith(OFFLINE_SKIP):
+            continue
         raw = p.read_bytes()
         raw_total += len(raw)
         if rel == "meta.json":
@@ -105,6 +109,9 @@ Windows 請用 Edge 或 Chrome（需 80 版以上）；若開在記事本，右�
 健保署開放資料（政府資料開放授權條款第 1 版）、CDC/CMS ICD-10、Disease Ontology、
 Wikidata、NLM MeSH®、國家教育研究院。
 資料快照：{built}　指紋：{fp}
+
+線上版（手機可加入主畫面）：https://rickyrickyrickyyu.github.io/icd10-tw/
+製作：M116 RickyYu
 """
 
 

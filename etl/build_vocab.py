@@ -194,6 +194,15 @@ def cdc_index(v: Vocab, rep: dict) -> None:
             v.add(", ".join(p), code, "cdc-idx")
             if len(p) == 2:
                 v.add(f"{p[1]} {p[0]}", code, "cdc-idx")
+            # ★ 主詞帶變形清單（"Stenosis, stenotic"、"Tuberculosis, tubercular, tuberculous"）時，
+            #   另收「只用主詞第一個字」的版本。否則詞集合多了 stenotic，永遠對不到使用者打的
+            #   "aortic stenosis"，I35.0 輸給 DOID 對到的風濕性／先天性碼（diverse 題組 v10 實測）。
+            head = p[0].split(",")[0].strip() if p else ""
+            if head and head != p[0]:
+                hp = [head, *p[1:]]
+                v.add(", ".join(hp), code, "cdc-idx")
+                if len(hp) == 2:
+                    v.add(f"{hp[1]} {hp[0]}", code, "cdc-idx")
             if nemod and len(p) <= 2:
                 v.add(" ".join([nemod, *reversed(p)]) if len(p) == 2 else f"{nemod} {p[0]}", code, "cdc-idx")
             c, _ = v.resolve(code)
@@ -235,7 +244,9 @@ def cdc_index(v: Vocab, rep: dict) -> None:
             via = "neo" if code else None
         if not code:
             segs = t.split(", ")
-            for cut in range(len(segs), 0, -1):         # "Herpes, zoster, eye" 找不到就退一層
+            # 找不到就「只退一層」（"Herpes, zoster, eye" → "Herpes, zoster"），而且至少保留主詞＋一層：
+            # 一路退到只剩主詞會對到非常籠統的碼（bee sting 曾因此掛到 D55.0）。
+            for cut in [c for c in (len(segs), len(segs) - 1) if c >= 1 and not (c == 1 and len(segs) > 1)]:
                 k = key(", ".join(segs[:cut]))
                 if k in node_code:
                     code, via = node_code[k], "node"
@@ -479,11 +490,17 @@ def wikidata(vcm: Vocab, rep: dict, cm_rows: list) -> None:
         rep["wikidata"] = "missing"
         return
     rows = json.loads(p.read_text(encoding="utf-8"))
-    old = json.loads((STAGING / "oldnames.json").read_text(encoding="utf-8"))
-    corpus = set("".join(r[1] for r in cm_rows))
-    for names in list(old["zh14"].values()) + list(old["zh9"].values()):
-        corpus.update("".join(names))
     cjk = re.compile(r"[㐀-鿿]")
+
+    # ★ 簡體判定：能否以 Big5（cp950）編碼。台灣用的正體字都在 Big5，简体独有字（锐、湿、癣、风）不在。
+    #   v2–v10 用「每個字都要出現在台灣醫學語料」判定，太嚴 ——「川崎病」的「崎」語料沒出現就被擋，
+    #   而官方 M30.3 中文名是「皮膚粘膜淋巴結綜合症(Kawasaki)」，結果「川崎病」查無結果。
+    def traditional_ok(s: str) -> bool:
+        try:
+            s.encode("cp950")
+            return True
+        except UnicodeEncodeError:
+            return False
     has_cm = {r[2] for r in rows if r[0] == "P4229"}
     n = defaultdict(int)
     for prop, kind, item, code, text, lang in rows:
@@ -494,7 +511,7 @@ def wikidata(vcm: Vocab, rep: dict, cm_rows: list) -> None:
             continue
         if lang == "zh":
             chars = cjk.findall(text)
-            if not chars or any(c not in corpus for c in chars):
+            if not chars or not traditional_ok("".join(chars)):
                 n["zh_rejected"] += 1
                 continue
         elif lang.startswith("zh") and not cjk.search(text):
