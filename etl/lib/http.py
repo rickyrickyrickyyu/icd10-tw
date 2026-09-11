@@ -23,7 +23,10 @@ from config import USER_AGENT  # noqa: E402
 
 
 def _curl(args: list[str], timeout: int) -> bytes:
-    r = subprocess.run(["curl", "-sSfL", "-A", USER_AGENT, "--max-time", str(timeout), *args],
+    # ★ --retry-all-errors：健保署在連續下載時會 Connection reset by peer（curl 56），
+    #   預設的 --retry 只重試逾時與 5xx，不會重試這種錯。
+    r = subprocess.run(["curl", "-sSfL", "-A", USER_AGENT, "--max-time", str(timeout),
+                        "--retry", "4", "--retry-all-errors", "--retry-delay", "10", *args],
                        capture_output=True)
     if r.returncode != 0:
         raise RuntimeError(f"curl 失敗 rc={r.returncode}: {r.stderr.decode(errors='ignore')[:200]}")
@@ -38,7 +41,7 @@ def fetch(url: str, *, retries: int = 4, timeout: int = 600) -> bytes:
         except RuntimeError as e:
             last = e
             if attempt < retries - 1:
-                time.sleep(2 ** attempt)
+                time.sleep(15 * (attempt + 1))      # 被 reset 時給對方伺服器喘息（15/30/45 秒）
     raise RuntimeError(f"下載失敗 {url}: {last}")
 
 

@@ -82,6 +82,9 @@ export default function CodeDetail({ code: raw }) {
           <span className="text-lg">{zh}</span>
         </div>
         <p className="text-slate-600">{en}</p>
+        {zh.includes('?') && (
+          <p className="mt-1 text-xs text-amber-700">官方中文名含亂碼：「?」在健保署原始檔即如此（對照英文名，應為「瘻」）。本站照原樣顯示，但搜尋「瘻管」也找得到。</p>
+        )}
         {use === 0 ? (
           <p className="mt-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
             ⚠️ 標題碼，<b>不可申報</b>。申報需選到下層的可申報碼（共 {st.nDesc} 個下層碼）。

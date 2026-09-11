@@ -143,7 +143,15 @@ UI：自動完成顯示「命中原因」、Search details、explode 開關、�
 | v10 | 俗稱 42＋縮寫 38 條經醫師全部核可 | 98.2／99.6 | 95.6／100 | 73.6／86.4 | 66.1／77.1 | 95.5／99.5 | 8.4 ms |
 | **v11** | **換一批跨科別新題（diverse 177 題）反覆測**：Big5 判定簡體（原字集法擋掉「川崎病」）、CDC 主詞首字變體（"Stenosis, stenotic"）、see 只退一層、★ 只給 CDC 直接碼（+8%）、表現碼 ×0.9（目前 baseline） | 98.2／99.6 | **96.7／100** | **78.3／89.8** | 66.0／77.0 | **96.5／99.5** | 8.8 ms |
 
-diverse（跨科別、從未拿來調參的新題）：v10 首測 Hit@1 93.2／Hit@5 98.9 → v11 **97.2／100**、零結果 0。
+| **v12** | 多字查詢展開已核可縮寫（「BCC nose」→ basal cell carcinoma nose）、「主動脈瓣狹窄」策展、官方亂碼提示（目前 baseline） | 98.2／99.6 | 96.7／100 | 78.3／89.8 | 66.0／77.0 | 96.5／99.5 | 8.6 ms |
+
+diverse（跨科別、從未拿來調參的新題）：v10 首測 Hit@1 93.2／Hit@5 98.9 → v11 97.2／100 → v12 **97.8／100**（180 題）、零結果 0。
+剩下 4 題都是「標題碼第 1、可申報子碼第 2」（突發性耳聾、dog bite、bee sting、nicotine dependence），正解仍在前 2。
+
+線上實測（2026-09-11，全部診斷範圍，20 個跨科別疾病名稱逐一查）：皮蛇→B02.9、川崎病→M30.3、aortic stenosis→I35.0★、
+pyelonephritis→N12、勃起功能障礙→N52.9、糖尿病腎病變→E11.21、退化性膝關節炎→M17.9、狹心症→I20.9、
+herpes zoster eye→B02.39★、psoraisis→L40.9★、hypertensoin→I10★、思覺失調症→F20.9★、登革熱→A90、恙蟲病→A75.3、
+中暑→T67.0、L400→L40.0、696.1→7 碼對應；v12 再修正 主動脈瓣狹窄→I35.0、BCC nose→C44.311。
 
 v7 退回的原因：保留集的正解常是標題碼本身，子碼同分搶到第一就讓 Hit@1 掉 6 點；而且「CDC 英文名比對」
 與「子孫含 unspecified」兩條規則都把 B02 的預設碼選成 B02.30（帶狀疱疹眼病）。v8 排名與 v6 完全相同，
@@ -192,6 +200,8 @@ clinical 剩下的失分幾乎全是俗稱／縮寫（皮蛇、香港腳、BCC�
 **部署**
 - GitHub runner（Ubuntu 24.04）系統 Python 是 externally-managed，`uv pip install --system` 被拒 →
   update.yml 先 `actions/setup-python`（首次上線那次自動更新就死在這步）。
+- **健保署會 reset 連續大量下載**：第一版 update.yml 先 `--check` 抓 6 個 CSV、pipeline 又抓一次（約 240 MB），
+  第二輪 `curl 56 Connection reset by peer` → 改成只下載一次、pipeline 用 `rebuild`，curl 加 `--retry-all-errors`。
 - 代碼詳細頁原本載 cm.json＋vocab_cm.json（原始 24 MB），線上首次開 `#/c/L40.0` 實測 **56 秒** →
   改成依首字母的 `detail/<字母>.json` 分片；離線包不內嵌分片，前端改從全庫切（`useData.loadDetail`）。
 

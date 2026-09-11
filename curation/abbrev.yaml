@@ -5,45 +5,47 @@
 #   MM（黑色素瘤 vs 多發性骨髓瘤）、AA（圓禿 vs 再生不良性貧血）、PE（肺栓塞 vs 理學檢查）。
 #   這些打全名即可命中，收了反而讓一半的人查到錯的東西。
 # ★ 草擬：Claude（2026-09-11）。核可後 make rebuild。
+# expand：多字查詢時把縮寫展開成全名再做 ATM（「BCC nose」→ basal cell carcinoma nose）；
+#   單獨查縮寫仍直接對到 codes。展開詞只是縮寫的全名，不改變已核可的對應（v12 加）。
 reviewed_by: "M116 RickyYu（2026-09-11 全部核可）"
 items:
   # 皮膚科
-  - {term: AD, codes: [L20.9], note: atopic dermatitis, approved: true}
-  - {term: SLE, codes: [M32.9], note: systemic lupus erythematosus, approved: true}
-  - {term: DLE, codes: [L93.0], note: discoid lupus erythematosus, approved: true}
-  - {term: BCC, codes: [C44.91], note: basal cell carcinoma of skin, unspecified, approved: true}
-  - {term: SCC, codes: [C44.92], note: 皮膚鱗狀細胞癌（皮膚科語境）, approved: true}
-  - {term: SJS, codes: [L51.1], note: Stevens-Johnson syndrome, approved: true}
-  - {term: TEN, codes: [L51.2], note: toxic epidermal necrolysis, approved: true}
+  - {term: AD, codes: [L20.9], note: atopic dermatitis, expand: "atopic dermatitis", approved: true}
+  - {term: SLE, codes: [M32.9], note: systemic lupus erythematosus, expand: "systemic lupus erythematosus", approved: true}
+  - {term: DLE, codes: [L93.0], note: discoid lupus erythematosus, expand: "discoid lupus erythematosus", approved: true}
+  - {term: BCC, codes: [C44.91], note: basal cell carcinoma of skin, unspecified, expand: "basal cell carcinoma", approved: true}
+  - {term: SCC, codes: [C44.92], note: 皮膚鱗狀細胞癌（皮膚科語境）, expand: "squamous cell carcinoma", approved: true}
+  - {term: SJS, codes: [L51.1], note: Stevens-Johnson syndrome, expand: "stevens johnson syndrome", approved: true}
+  - {term: TEN, codes: [L51.2], note: toxic epidermal necrolysis, expand: "toxic epidermal necrolysis", approved: true}
   - {term: SJS/TEN, codes: [L51.3], note: overlap syndrome, approved: true}
-  - {term: DRESS, codes: [D72.12], note: drug rash with eosinophilia and systemic symptoms, approved: true}
-  - {term: HS, codes: [L73.2], note: hidradenitis suppurativa, approved: true}
-  - {term: HZ, codes: [B02.9], note: herpes zoster, approved: true}
-  - {term: HSV, codes: [B00.9], note: herpes simplex virus infection, approved: true}
-  - {term: HPV, codes: [B97.7], note: papillomavirus as cause of disease, approved: true}
-  - {term: MF, codes: [C84.00], note: mycosis fungoides, approved: true}
-  - {term: AK, codes: [L57.0], note: actinic keratosis, approved: true}
-  - {term: SK, codes: [L82.1], note: seborrheic keratosis, approved: true}
-  - {term: PPP, codes: [L40.3], note: pustulosis palmaris et plantaris, approved: true}
-  - {term: GPP, codes: [L40.1], note: generalized pustular psoriasis, approved: true}
-  - {term: CSU, codes: [L50.1], note: chronic spontaneous urticaria, approved: true}
-  - {term: HFMD, codes: [B08.4], note: hand, foot and mouth disease, approved: true}
+  - {term: DRESS, codes: [D72.12], note: drug rash with eosinophilia and systemic symptoms, expand: "drug rash with eosinophilia and systemic symptoms", approved: true}
+  - {term: HS, codes: [L73.2], note: hidradenitis suppurativa, expand: "hidradenitis suppurativa", approved: true}
+  - {term: HZ, codes: [B02.9], note: herpes zoster, expand: "herpes zoster", approved: true}
+  - {term: HSV, codes: [B00.9], note: herpes simplex virus infection, expand: "herpes simplex", approved: true}
+  - {term: HPV, codes: [B97.7], note: papillomavirus as cause of disease, expand: "papillomavirus", approved: true}
+  - {term: MF, codes: [C84.00], note: mycosis fungoides, expand: "mycosis fungoides", approved: true}
+  - {term: AK, codes: [L57.0], note: actinic keratosis, expand: "actinic keratosis", approved: true}
+  - {term: SK, codes: [L82.1], note: seborrheic keratosis, expand: "seborrheic keratosis", approved: true}
+  - {term: PPP, codes: [L40.3], note: pustulosis palmaris et plantaris, expand: "pustulosis palmaris et plantaris", approved: true}
+  - {term: GPP, codes: [L40.1], note: generalized pustular psoriasis, expand: "generalized pustular psoriasis", approved: true}
+  - {term: CSU, codes: [L50.1], note: chronic spontaneous urticaria, expand: "chronic urticaria", approved: true}
+  - {term: HFMD, codes: [B08.4], note: hand, foot and mouth disease, expand: "hand foot and mouth disease", approved: true}
   # 一般科
-  - {term: URI, codes: [J06.9], note: upper respiratory infection, approved: true}
-  - {term: UTI, codes: [N39.0], note: urinary tract infection, approved: true}
-  - {term: GERD, codes: [K21.9], note: gastro-esophageal reflux disease, approved: true}
-  - {term: COPD, codes: [J44.9], note: chronic obstructive pulmonary disease, approved: true}
-  - {term: CKD, codes: [N18.9], note: chronic kidney disease, approved: true}
-  - {term: CHF, codes: [I50.9], note: heart failure, approved: true}
-  - {term: DVT, codes: [I82.409], note: acute DVT of unspecified deep veins of lower extremity, approved: true}
-  - {term: DM, codes: [E11.9], note: type 2 diabetes without complications, approved: true}
-  - {term: HTN, codes: [I10], note: essential hypertension, approved: true}
-  - {term: AF, codes: [I48.91], note: atrial fibrillation, approved: true}
-  - {term: CAD, codes: [I25.10], note: coronary artery disease, approved: true}
-  - {term: AMI, codes: [I21.9], note: acute myocardial infarction, approved: true}
-  - {term: TB, codes: [A15.9], note: respiratory tuberculosis, approved: true}
-  - {term: OA, codes: [M19.90], note: osteoarthritis, approved: true}
-  - {term: RA, codes: [M06.9], note: rheumatoid arthritis, approved: true}
-  - {term: BPH, codes: [N40.0], note: benign prostatic hyperplasia, approved: true}
-  - {term: IBS, codes: [K58.9], note: irritable bowel syndrome, approved: true}
-  - {term: HCC, codes: [C22.0], note: hepatocellular carcinoma, approved: true}
+  - {term: URI, codes: [J06.9], note: upper respiratory infection, expand: "upper respiratory infection", approved: true}
+  - {term: UTI, codes: [N39.0], note: urinary tract infection, expand: "urinary tract infection", approved: true}
+  - {term: GERD, codes: [K21.9], note: gastro-esophageal reflux disease, expand: "gastroesophageal reflux", approved: true}
+  - {term: COPD, codes: [J44.9], note: chronic obstructive pulmonary disease, expand: "chronic obstructive pulmonary disease", approved: true}
+  - {term: CKD, codes: [N18.9], note: chronic kidney disease, expand: "chronic kidney disease", approved: true}
+  - {term: CHF, codes: [I50.9], note: heart failure, expand: "heart failure", approved: true}
+  - {term: DVT, codes: [I82.409], note: acute DVT of unspecified deep veins of lower extremity, expand: "deep vein thrombosis", approved: true}
+  - {term: DM, codes: [E11.9], note: type 2 diabetes without complications, expand: "diabetes mellitus", approved: true}
+  - {term: HTN, codes: [I10], note: essential hypertension, expand: "hypertension", approved: true}
+  - {term: AF, codes: [I48.91], note: atrial fibrillation, expand: "atrial fibrillation", approved: true}
+  - {term: CAD, codes: [I25.10], note: coronary artery disease, expand: "coronary artery disease", approved: true}
+  - {term: AMI, codes: [I21.9], note: acute myocardial infarction, expand: "acute myocardial infarction", approved: true}
+  - {term: TB, codes: [A15.9], note: respiratory tuberculosis, expand: "tuberculosis", approved: true}
+  - {term: OA, codes: [M19.90], note: osteoarthritis, expand: "osteoarthritis", approved: true}
+  - {term: RA, codes: [M06.9], note: rheumatoid arthritis, expand: "rheumatoid arthritis", approved: true}
+  - {term: BPH, codes: [N40.0], note: benign prostatic hyperplasia, expand: "benign prostatic hyperplasia", approved: true}
+  - {term: IBS, codes: [K58.9], note: irritable bowel syndrome, expand: "irritable bowel syndrome", approved: true}
+  - {term: HCC, codes: [C22.0], note: hepatocellular carcinoma, expand: "hepatocellular carcinoma", approved: true}

@@ -52,3 +52,4 @@ items:
   - {term: 白斑症, codes: [L80], note: 皮膚科語境＝白斑（vitiligo）；黏膜白斑症另有各器官碼, approved: true}
   # ── v11：使用者授權自我迭代後由 Claude 補（2026-09-11），請抽查 ──
   - {term: 勃起功能障礙, codes: [N52.9], note: 官方譯名「男性勃起障礙」；心因性另編 F52.21, approved: true, added_by: claude-v11}
+  - {term: 主動脈瓣狹窄, codes: [I35.0], note: 最常見的非風濕性（官方名「非風濕性主動脈瓣狹窄」）；風濕性 I06.0、先天性 Q23.0, approved: true, added_by: claude-v12}

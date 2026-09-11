@@ -63,6 +63,9 @@ SRC = ["title",       # 0 官方英文名（前端另外從 codes 讀，這裡�
        "fix-zh"]      # 17 官方中文名亂碼修復（見 repair_zh）
 S = {n: i for i, n in enumerate(SRC)}
 
+# 縮寫 → 全名（abbrev.yaml 的 expand），前端在多字查詢時展開（v12）
+ABBR: dict[str, str] = {}
+
 # 保留集：用 (來源, 文字, 代碼) 的雜湊決定，固定、可重現、跨次建置穩定。
 HELDOUT = {"cdc-idx": 5, "cdc-see": 5, "zh14": 5, "zh9": 5}   # 1/5 = 20%
 
@@ -552,7 +555,10 @@ def curated(vcm: Vocab, rep: dict) -> None:
         for x in ok:
             for code in x["codes"]:
                 vcm.add(x["term"], code, src)
+            if x.get("expand"):
+                ABBR[key(x["term"])] = x["expand"]
         rep[fname] = {"items": len(items), "approved": len(ok)}
+    rep["abbr_expand"] = len(ABBR)
 
 
 # ── CMS PCS Index ───────────────────────────────────────────────────
@@ -635,7 +641,7 @@ def main() -> int:
 
     dump = lambda name, obj: (STAGING / name).write_text(  # noqa: E731
         json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    dump("vocab_cm.json", {**vcm.dump(), "def": defaults})
+    dump("vocab_cm.json", {**vcm.dump(), "def": defaults, "abbr": ABBR})
     dump("vocab_pcs.json", vpcs.dump())
     dump("nodes_cm.json", nodes)
     dump("tree_cm.json", tree)

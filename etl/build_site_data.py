@@ -93,7 +93,8 @@ def main() -> int:
                 keep.add(x)
     write("derm.json", {"rows": [r for r in cm_rows if r[0] in keep],
                         "vocab": {"src": vcm["src"], "t": [t for t in vcm["t"] if t[1] in keep],
-                                  "def": {h: c for h, c in (vcm.get("def") or {}).items() if h in keep and c in keep}}})
+                                  "def": {h: c for h, c in (vcm.get("def") or {}).items() if h in keep and c in keep},
+                                  "abbr": vcm.get("abbr") or {}}})
 
     # ★ 詳細頁分片（依首字母）：代碼頁原本要載 cm.json＋vocab_cm.json（原始 24 MB、gz 2.7 MB），
     #   線上首次開 #/c/L40.0 實測 vocab_cm.json 就花 56 秒。同一碼的祖先、子孫、入口詞都在同首字母內。

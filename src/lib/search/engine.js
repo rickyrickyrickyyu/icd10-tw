@@ -81,6 +81,7 @@ export class Engine {
     this.srcNames = vocab?.src ?? [];
     this.defaults = vocab?.def ?? {};           // 標題碼 → 預設可申報子碼（build_vocab 產生）
     this.cdcIdx = new Set(['cdc-idx', 'cdc-see'].map((n) => this.srcNames.indexOf(n)).filter((i) => i >= 0));
+    this.abbr = new Map(Object.entries(vocab?.abbr ?? {}));   // 縮寫 → 全名（多字查詢時展開）
     const ex = opts.exclude;
     this.vt = (vocab?.t ?? []).filter((v) => !(ex && ex(v)));     // 本索引實際使用的入口詞
     const t0 = Date.now();
@@ -239,8 +240,14 @@ export class Engine {
   /** 整句拼字修正：英文詞 stem 後不在索引裡才修，中文與數字不動。 */
   correctText(text) {
     const corrections = [];
-    const out = norm(text).split(' ').map((w) => {
+    const words = norm(text).split(' ');
+    // ★ 多字查詢時把已核可縮寫展開成全名（「BCC nose」→ basal cell carcinoma nose）：
+    //   縮寫本身只對到一個碼（C44.91），和部位詞 AND 起來會落空，v11 線上實測 C44.311 只排第二。
+    //   單獨查縮寫時不展開，直接走入口詞對應。
+    const multi = words.filter(Boolean).length > 1;
+    const out = words.map((w) => {
       if (!w || CJK.test(w)) return w;
+      if (multi && this.abbr.has(w)) { corrections.push([w, this.abbr.get(w)]); return this.abbr.get(w); }
       const fix = this.correct(stem(w), w);
       if (fix) { corrections.push([w, fix]); return fix; }
       return w;

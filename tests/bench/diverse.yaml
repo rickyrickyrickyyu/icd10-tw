@@ -196,3 +196,7 @@ items:
   - {q: aphthous ulcer, gold: [K12.0]}
   - {q: 口腔潰瘍, gold: [K12.0, "K12*"]}
   - {q: nicotine dependence, gold: ["F17.2*"]}
+  # v12：線上實測發現的（縮寫＋部位）
+  - {q: BCC nose, gold: [C44.311], tag: abbrev}
+  - {q: SCC scalp, gold: [C44.42], tag: abbrev}
+  - {q: HSV keratitis, gold: [B00.52], tag: abbrev}

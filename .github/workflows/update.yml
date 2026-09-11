@@ -65,11 +65,18 @@ jobs:
           path: data/raw/vocab
           key: vocab-${{ steps.month.outputs.ym }}
 
-      - name: 健保資料有沒有變
+      # ★ 只下載一次：這一步就把 6 個 CSV 存進 data/raw 並比 sha，後面 pipeline 用 rebuild（不再下載）。
+      #   第一版先 --check 抓一遍、pipeline 又抓一遍（約 240 MB），健保署伺服器第二輪直接
+      #   Connection reset by peer（curl 56），自動更新失敗。
+      - name: 下載健保資料並判斷有沒有變
         id: check
         run: |
-          python3 etl/fetch_csv.py --check | tee check.log
+          python3 etl/fetch_csv.py | tee check.log
           echo "changed=$(grep -o 'CHANGED=[01]' check.log | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: 詞彙層（快取沒命中或強制才重抓）
+        if: steps.vocab.outputs.cache-hit != 'true' || inputs.force
+        run: python3 etl/fetch_vocab.py
 
       - name: 重大傷病對照表頁面檢查（Playwright；WAF 擋 curl）
         id: catas
@@ -88,7 +95,7 @@ jobs:
         env:
           OVERRIDE: ${{ inputs.override_gate }}
         run: |
-          bash bin/pipeline.sh fetch $([[ "${{ steps.vocab.outputs.cache-hit }}" != "true" || "${{ inputs.force }}" == "true" ]] && echo --vocab)
+          bash bin/pipeline.sh rebuild
           echo "ran=1" >> "$GITHUB_OUTPUT"
 
       - name: 保留 staging 供人工檢視

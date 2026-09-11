@@ -22,6 +22,9 @@ export default function ResultRow({ it, pcs, cat }) {
             )}
           </span>
           <span className="block text-sm text-slate-500">{it.en}</span>
+          {it.zh.includes('?') && (
+            <span className="block text-xs text-amber-700">官方中文名含亂碼：「?」在健保署原始檔即如此（應為「瘻」）</span>
+          )}
           {it.why?.text && it.why.src !== 'title' && (
             <span className="block text-xs text-slate-400 mt-0.5">
               命中：{it.why.text}（{SRC_LABEL[it.why.src] ?? it.why.src}）
