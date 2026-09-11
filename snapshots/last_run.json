@@ -17,7 +17,7 @@
   "map9_pcs": "cfbf7c8e5ba13c971ab3cd1b84814f6d15d11edec8be16e496b9d0098b74f8b7"
  },
  "vocab_cm": 262386,
- "data_fingerprint": "3ca1bc37031f18cf",
+ "data_fingerprint": "0c50ecc261668311",
  "sources": {
   "nhi": {
    "cm": {
@@ -127,7 +127,7 @@
    "id": 11,
    "name": "詞彙量健檢",
    "passed": true,
-   "message": "262,386（上期 262385）｜各來源 {'cdc-idx': 114632, 'cdc-see': 11212, 'cdc-incl': 10530, 'cdc-neo': 9012, 'doid': 10186, 'doid-rel': 195, 'mesh': 20596, 'zh14': 65339, 'zh9': 10221, 'en9': 9159, 'naer': 1103, 'wd': 8903, 'wd-alias': 50217, 'cur-zh': 47, 'cur-abbr': 31, 'fix-zh': 7, 'cms-idx': 12801}",
+   "message": "262,386（上期 262386）｜各來源 {'cdc-idx': 114632, 'cdc-see': 11212, 'cdc-incl': 10530, 'cdc-neo': 9012, 'doid': 10186, 'doid-rel': 195, 'mesh': 20596, 'zh14': 65339, 'zh9': 10221, 'en9': 9159, 'naer': 1103, 'wd': 8903, 'wd-alias': 50217, 'cur-zh': 47, 'cur-abbr': 31, 'fix-zh': 7, 'cms-idx': 12801}",
    "overridden": false
   },
   {
@@ -162,7 +162,7 @@
    "id": 15,
    "name": "資料指紋",
    "passed": true,
-   "message": "3ca1bc37031f18cf vs meta 3ca1bc37031f18cf",
+   "message": "0c50ecc261668311 vs meta 0c50ecc261668311",
    "overridden": false
   }
  ]
