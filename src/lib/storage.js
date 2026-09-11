@@ -10,9 +10,11 @@ const KEY = 'icd10-tw.prefs.v1';
 function read() {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    return v && typeof v === 'object' ? { fav: v.fav ?? [], recent: v.recent ?? [] } : { fav: [], recent: [] };
+    return v && typeof v === 'object'
+      ? { fav: v.fav ?? [], recent: v.recent ?? [], used: Array.isArray(v.used) ? v.used.filter((x) => x?.c) : [] }
+      : { fav: [], recent: [], used: [] };
   } catch {
-    return { fav: [], recent: [] };
+    return { fav: [], recent: [], used: [] };
   }
 }
 
@@ -25,6 +27,18 @@ export const getPrefs = read;
 export function toggleFav(code) {
   const s = read();
   s.fav = s.fav.includes(code) ? s.fav.filter((c) => c !== code) : [code, ...s.fav].slice(0, 200);
+  write(s);
+  return s;
+}
+
+/**
+ * 最近用過的碼（複製過或開過可申報碼的詳細頁）：醫師重複用的碼很集中，
+ * 搜尋框空白聚焦時直接列出，不必每次重打。連名稱一起存，下拉清單不必等分片載入。
+ */
+export function pushUsed(c, zh = '', en = '', pcs = false) {
+  if (!c) return read();
+  const s = read();
+  s.used = [{ c, zh, en, ...(pcs ? { p: 1 } : {}) }, ...s.used.filter((x) => x.c !== c)].slice(0, 12);
   write(s);
   return s;
 }

@@ -11,6 +11,7 @@ import { norm, phraseKey, stem } from '../src/lib/search/normalize.js';
 import { cmCode, parseQuery } from '../src/lib/search/query.js';
 import { Engine } from '../src/lib/search/engine.js';
 import { facetsOf } from '../src/lib/search/facets.js';
+import { isWeak } from '../src/lib/search/scope.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 let n = 0;
@@ -66,6 +67,10 @@ if (existsSync(derm)) {
   });
   t('中文錯切防呆：異位性皮膚炎 → L20', () => assert.ok(top('異位性皮膚炎')[0].startsWith('L20')));
   t('範圍查詢', () => assert.deepEqual(top('L40.0-L40.4').slice(0, 5), ['L40.0', 'L40.1', 'L40.2', 'L40.3', 'L40.4']));
+  t('皮膚科子集不可信 → 改查全庫（heart failure 在子集會以高分命中 A52.06 心血管梅毒）', () => {
+    for (const q of ['heart failure', '三叉神經痛', '高血壓', '糖尿病腎病變', 'septic shock']) assert.ok(isWeak(e.search(q, { limit: 1 })), q);
+    for (const q of ['乾癬', '皮蛇', 'shingles', '異位性皮膚炎', 'BCC nose']) assert.ok(!isWeak(e.search(q, { limit: 1 })), q);
+  });
 } else {
   console.log('  － 沒有 public/data（先 make rebuild），略過資料測試');
 }

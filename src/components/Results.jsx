@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { isWeak } from '../lib/search/scope.js';
 import { load, loadMap14, loadMap9 } from '../hooks/useData.js';
-import { pushRecent } from '../lib/storage.js';
+import { getPrefs, pushRecent } from '../lib/storage.js';
 import { href } from '../lib/routes.js';
 import { applyFacets, facetCounts, FACET_LABEL } from '../lib/search/facets.js';
 import { parseQuery } from '../lib/search/query.js';
@@ -16,8 +17,22 @@ export default function Results({ core, q }) {
   const [sel, setSel] = useState({});
   const [cat, setCat] = useState(null);
   const [old, setOld] = useState(null);           // {kind, code, data}
+  const fav = useMemo(() => new Set(getPrefs().fav), [q]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setSel({}); pushRecent(q); }, [q]);
+
+  // 皮膚科子集查不到好結果 → 自動改查全部 CM（CLI 同一條規則）。
+  // 每個查詢只自動切一次：使用者按「回皮膚科」後不會又被切走。
+  const autoTried = useRef(new Set());
+  const [autoFrom, setAutoFrom] = useState(null);
+  useEffect(() => {
+    if (core.scope !== 'derm' || !core.eng || autoTried.current.has(q)) return;
+    const r = core.eng.search(q, { limit: 1 });
+    if (!isWeak(r)) return;
+    autoTried.current.add(q);
+    setAutoFrom(q);
+    core.setScope('cm');
+  }, [q, core.scope, core.eng]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load('cat.json').then(setCat).catch(() => {}); }, []);
 
   const res = useMemo(() => {
@@ -48,6 +63,14 @@ export default function Results({ core, q }) {
 
   return (
     <div className="space-y-4">
+      {autoFrom === q && core.scope !== 'derm' && (
+        <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900" data-testid="auto-cm">
+          皮膚科子集沒有好的符合，已自動改查<b>全部診斷</b>。
+          <button type="button" className="ml-2 underline text-brand-700" onClick={() => core.setScope('derm')}>回皮膚科子集</button>
+        </p>
+      )}
+      {core.building && autoFrom === q && <p className="text-sm text-slate-500">皮膚科子集沒有好的符合，正在載入全部診斷…</p>}
+
       <SearchDetails d={d} res={res} explode={explode} setExplode={setExplode} scope={core.scope} />
 
       {old && <OldCodeBox old={old} />}
@@ -83,7 +106,7 @@ export default function Results({ core, q }) {
         </div>
       ) : (
         <ul className="rounded-xl border border-slate-200 bg-white px-3">
-          {items.map((it) => <ResultRow key={it.code} it={it} pcs={core.scope === 'pcs'} cat={cat} />)}
+          {items.map((it) => <ResultRow key={it.code} it={it} pcs={core.scope === 'pcs'} cat={cat} q={q} fav={fav} />)}
         </ul>
       )}
       {core.scope === 'derm' && items.length > 0 && (

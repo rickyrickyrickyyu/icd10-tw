@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { load, loadDetail, loadNodes } from '../hooks/useData.js';
 import { href } from '../lib/routes.js';
-import { getPrefs, toggleFav } from '../lib/storage.js';
+import { getPrefs, pushUsed, toggleFav } from '../lib/storage.js';
+import { copyCode } from '../lib/clip.js';
 import { cmCode } from '../lib/search/query.js';
 import { NOTE_LABEL, SRC_LABEL, ST_LABEL } from './labels.js';
 
@@ -53,6 +54,11 @@ export default function CodeDetail({ code: raw }) {
     return Object.entries(g).sort((a, b) => b[1].length - a[1].length);
   }, [st.entries]);
 
+  // 開過的可申報碼記入「最近用過」（標題碼只是瀏覽路過，不記）
+  useEffect(() => {
+    if (st.row && st.row[3] !== 0) pushUsed(st.row[0], st.row[1], st.row[2]);
+  }, [st.row]);
+
   if (st.loading) return <p className="text-slate-500">載入中…</p>;
   if (st.error) return <p className="text-red-700">載入失敗：{st.error}</p>;
   if (st.missing) {
@@ -64,7 +70,7 @@ export default function CodeDetail({ code: raw }) {
     );
   }
   const [c, zh, en, use, stt, rev] = st.row;
-  const copy = (text) => navigator.clipboard?.writeText(text).catch(() => {});
+  const copy = (text) => copyCode({ code: c, zh, en }, text);
 
   return (
     <article className="space-y-4">

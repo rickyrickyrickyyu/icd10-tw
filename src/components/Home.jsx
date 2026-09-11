@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getPrefs } from '../lib/storage.js';
 import { href } from '../lib/routes.js';
+import { copyCode } from '../lib/clip.js';
 import DataFreshness from './DataFreshness.jsx';
 
 const EXAMPLES = ['皮蛇', '異位性皮膚炎', 'shingles', 'psoraisis', 'BCC nose', '糖尿病腎病變', 'L400', '696.1', 'L40.0-L40.4'];
@@ -20,6 +21,26 @@ export default function Home({ core }) {
           {EXAMPLES.map((e) => <a key={e} href={href.q(e)} className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 hover:bg-brand-100">{e}</a>)}
         </p>
       </section>
+      {prefs.used.length > 0 && (
+        <section className="text-sm">
+          <h2 className="text-slate-500 text-xs mb-1">最近用過的碼<span className="ml-1 text-slate-400">（搜尋框空白時也會列出；任何頁面按 / 回到搜尋框）</span></h2>
+          <ul className="rounded-xl border border-slate-200 bg-white px-3 divide-y divide-slate-100">
+            {prefs.used.map((u) => (
+              <li key={u.c} className="py-1.5 flex gap-3 items-baseline">
+                <a className="code text-brand-700 w-24 shrink-0 underline" href={u.p ? href.p(u.c) : href.c(u.c)}>{u.c}</a>
+                <span className="flex-1 min-w-0 truncate">{u.zh}<span className="ml-2 text-xs text-slate-500">{u.en}</span></span>
+                <button
+                  type="button"
+                  onClick={() => copyCode({ code: u.c, zh: u.zh, en: u.en }, u.c, Boolean(u.p))}
+                  className="shrink-0 text-xs px-2 py-0.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-700"
+                >
+                  複製
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {prefs.recent.length > 0 && (
         <section className="text-sm">
           <h2 className="text-slate-500 text-xs mb-1">最近查詢</h2>

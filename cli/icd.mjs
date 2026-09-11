@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Engine } from '../src/lib/search/engine.js';
 import { cmCode, parseQuery } from '../src/lib/search/query.js';
+import { isWeak } from '../src/lib/search/scope.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = join(ROOT, 'public', 'data');
@@ -91,7 +92,7 @@ function engineFor(scope) {
 }
 let scope = flag('--pcs') ? 'pcs' : flag('--all') ? 'cm' : 'derm';
 let res = engineFor(scope).search(q, { limit: 10 });
-if (scope === 'derm' && (res.items.length === 0 || (!res.items[0].atm && res.items[0].score < 5))) {
+if (scope === 'derm' && isWeak(res)) {
   scope = 'cm';
   res = engineFor(scope).search(q, { limit: 10 });
 }

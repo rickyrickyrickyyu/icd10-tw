@@ -13,6 +13,7 @@ import Favorites from './components/Favorites.jsx';
 import Home from './components/Home.jsx';
 import Footer from './components/Footer.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
+import Toast from './components/Toast.jsx';
 
 const SCOPES = [
   ['derm', '皮膚科'],
@@ -83,6 +84,7 @@ export default function App() {
         <ErrorBoundary key={rk}>{body}</ErrorBoundary>
       </main>
       <Footer meta={core.meta} />
+      <Toast />
     </div>
   );
 }
