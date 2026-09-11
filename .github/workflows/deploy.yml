@@ -37,6 +37,62 @@ jobs:
         with:
           path: ./dist
 
+  # ★ 功能更新也要發離線版 Release（v14 以前只有 update.yml 在「資料有變」時才發，
+  #   改介面後 Releases 上的離線版會一直停在舊介面，直到健保署下次改資料）。
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 這次 push 有沒有動到前端／離線包
+        id: chg
+        run: |
+          BEFORE='${{ github.event.before }}'
+          if [[ -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "app=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -qE '^(src/|index\.html$|vite\.config\.js$|public/(icon|manifest)|etl/build_offline\.py$)'; then
+            echo "app=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "app=0" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.chg.outputs.app == '1'
+        uses: pnpm/action-setup@v4
+      - if: steps.chg.outputs.app == '1'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - if: steps.chg.outputs.app == '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 建離線包並核對（只用標準函式庫）
+        if: steps.chg.outputs.app == '1'
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm exec vite build --mode offline
+          python3 etl/build_offline.py
+          python3 etl/check_offline.py
+      - name: 發 Release（附離線包）
+        if: steps.chg.outputs.app == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHORT="${GITHUB_SHA::7}"
+          TAG="app-$(date +%Y%m%d)-${SHORT}"
+          FP=$(python3 -c "import json;print(json.load(open('public/data/meta.json'))['data_fingerprint'])")
+          MSG=$(git log -1 --pretty=%s)
+          printf '%s\n\n離線版：下載 zip、解壓後雙擊 html。資料指紋 %s。\n' "$MSG" "$FP" > "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" offline/*.zip offline/READ-ME-FIRST.txt \
+            --title "功能更新 $(date +%F)（${SHORT}）" --notes-file "$RUNNER_TEMP/notes.md" --latest
+
   deploy:
     needs: build
     runs-on: ubuntu-latest

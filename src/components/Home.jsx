@@ -21,6 +21,24 @@ export default function Home({ core }) {
           {EXAMPLES.map((e) => <a key={e} href={href.q(e)} className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 hover:bg-brand-100">{e}</a>)}
         </p>
       </section>
+      {core.common && (
+        <section className="rounded-xl border border-slate-200 bg-white p-4 text-sm" data-testid="home-derm">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-medium">皮膚科常用碼{core.common.draft && <span className="ml-2 text-[11px] px-1.5 rounded bg-amber-100 text-amber-800">草擬、待醫師審閱</span>}</h2>
+            <a href="#/derm" className="text-xs underline text-brand-700">看全部</a>
+          </div>
+          <p className="mt-2 flex flex-wrap gap-1.5">
+            {core.common.groups.map((g, i) => (
+              <a key={g.name} href={`#/derm/${i}`} className="px-2 py-0.5 rounded-full border border-slate-200 hover:bg-slate-50">
+                {g.name}<span className="ml-1 text-slate-400">{g.codes.length}</span>
+              </a>
+            ))}
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            要一次查很多診斷？用 <a href="#/batch" className="underline text-brand-700">批次查碼</a>（貼上多行，完全在本機處理、不用 AI）。
+          </p>
+        </section>
+      )}
       {prefs.used.length > 0 && (
         <section className="text-sm">
           <h2 className="text-slate-500 text-xs mb-1">最近用過的碼<span className="ml-1 text-slate-400">（搜尋框空白時也會列出；任何頁面按 / 回到搜尋框）</span></h2>

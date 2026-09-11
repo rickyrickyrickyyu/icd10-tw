@@ -5,8 +5,7 @@
  * ★ 直接 import 網頁版的 src/lib/search/ —— 搜尋只有一份實作，CLI 與網頁不可能結果不同
  *   （nhi-drug-rules 當年是 JS/Python 雙實作，得靠 39 組 parity test 綁住）。
  *
- *   node cli/icd.mjs 皮蛇                先查皮膚科子集（快），沒結果自動改查全部 CM
- *   node cli/icd.mjs psoriasis --all     直接查全部 CM
+ *   node cli/icd.mjs 皮蛇                查全部 CM（v15 起不再有皮膚科子集；--all 仍接受、無作用）
  *   node cli/icd.mjs 0DTJ4ZZ --pcs       查 PCS
  *   node cli/icd.mjs L40                 代碼：印詳細（名稱、可否申報、下層碼、重大傷病、Excludes）
  *   node cli/icd.mjs 696.1               ICD-9 → 2023
@@ -17,7 +16,6 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Engine } from '../src/lib/search/engine.js';
 import { cmCode, parseQuery } from '../src/lib/search/query.js';
-import { isWeak } from '../src/lib/search/scope.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = join(ROOT, 'public', 'data');
@@ -87,15 +85,10 @@ if (one && (one.kind === 'cm' || one.kind === 'icd14') && !flag('--pcs')) {
 // 一般查詢
 function engineFor(scope) {
   if (scope === 'pcs') { const v = J('vocab_pcs.json'); return new Engine(J('pcs.json').rows, v, { kind: 'pcs' }); }
-  if (scope === 'derm') { const d = J('derm.json'); return new Engine(d.rows, d.vocab); }
   return new Engine(J('cm.json').rows, J('vocab_cm.json'));
 }
-let scope = flag('--pcs') ? 'pcs' : flag('--all') ? 'cm' : 'derm';
-let res = engineFor(scope).search(q, { limit: 10 });
-if (scope === 'derm' && isWeak(res)) {
-  scope = 'cm';
-  res = engineFor(scope).search(q, { limit: 10 });
-}
+const scope = flag('--pcs') ? 'pcs' : 'cm';
+const res = engineFor(scope).search(q, { limit: 10 });
 if (flag('--json')) { console.log(JSON.stringify({ scope, ...res }, null, 1)); process.exit(0); }
 
 const d = res.details;
@@ -103,7 +96,7 @@ const bits = [];
 if (d.corrections.length) bits.push(c('33', `拼字修正 ${d.corrections.map(([a, b]) => `${a}→${b}`).join(' ')}`));
 if (d.expansions?.length) bits.push(c('34', `縮寫展開 ${d.expansions.map(([a, b]) => `${a.toUpperCase()}→${b}`).join(' ')}`));
 for (const m of d.mapped) bits.push(`「${m.text}」→ 主題 ${m.concepts.slice(0, 3).map((x) => x.code).join('/')}`);
-console.log(c('2', `${res.total} 筆｜${scope === 'derm' ? '皮膚科' : scope === 'pcs' ? 'PCS' : '全部 CM'}${bits.length ? `｜${bits.join('｜')}` : ''}`));
+console.log(c('2', `${res.total} 筆｜${scope === 'pcs' ? 'PCS' : '全部 CM'}${bits.length ? `｜${bits.join('｜')}` : ''}`));
 for (const it of res.items.slice(0, 8)) {
   const tag = `${it.def ? c('33', '★') : ' '}${it.use === 0 ? c('2', '標') : ' '}`;
   const why = it.why?.text && it.why.src !== 'title' ? c('2', `  ← ${it.why.text}`) : '';

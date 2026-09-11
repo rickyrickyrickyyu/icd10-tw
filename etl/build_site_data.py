@@ -6,8 +6,8 @@
 
 檔案（路徑即前端 getJson 的 key）：
   meta.json                建置資訊、筆數、各來源版本、data_fingerprint
-  derm.json                皮膚科子集：{rows, vocab}（首載）
-  cm.json / vocab_cm.json  全 CM 與詞彙（切全庫時懶載）
+  derm_common.json         皮膚科常用碼清單：{draft, groups:[{name, codes:[[code,zh,en,use]]}], missing}（首載，極小）
+  cm.json / vocab_cm.json  全 CM 與詞彙（v15 起為預設範圍，首頁顯示後背景載入）
   pcs.json / vocab_pcs.json
   tree.json                CM 章節樹（CDC Tabular + 中文章名）＋ PCS section
   mesh.json                MeSH descriptor 資訊（只收有連到 ICD 的）
@@ -50,14 +50,6 @@ def shard_key(code: str) -> str:
     return c if c.isalnum() else "_"
 
 
-def in_ranges(code: str, ranges: list[list[str]]) -> bool:
-    for lo, hi in ranges:
-        # 前綴區間：code 的前 len(lo) 碼 ≥ lo 且前 len(hi) 碼 ≤ hi
-        if code[:len(lo)] >= lo and code[:len(hi)] <= hi:
-            return True
-    return False
-
-
 def main() -> int:
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -72,7 +64,7 @@ def main() -> int:
     cat = load("catastrophic.json")
     m14, m9 = load("map14.json"), load("map9.json")
     chapters = yaml.safe_load((CURATION / "chapters.yaml").read_text(encoding="utf-8"))
-    derm = yaml.safe_load((CURATION / "derm_ranges.yaml").read_text(encoding="utf-8"))
+    common = yaml.safe_load((CURATION / "derm_common.yaml").read_text(encoding="utf-8"))
 
     # 列：[code, zh, en, use, st, rev]（parent 由前端依前綴推，省空間）
     cm_rows = [r[:6] for r in cm]
@@ -82,19 +74,21 @@ def main() -> int:
     write("vocab_cm.json", vcm)
     write("vocab_pcs.json", vpcs)
 
-    # 皮膚科子集：範圍內的碼 + 其所有祖先（麵包屑才接得起來）
-    have = {r[0] for r in cm_rows}
-    keep = {r[0] for r in cm_rows if in_ranges(r[0], derm["ranges"])}
-    for c in list(keep):
-        x = c
-        while len(x) > 3:
-            x = x[:-1].rstrip(".")
-            if x in have:
-                keep.add(x)
-    write("derm.json", {"rows": [r for r in cm_rows if r[0] in keep],
-                        "vocab": {"src": vcm["src"], "t": [t for t in vcm["t"] if t[1] in keep],
-                                  "def": {h: c for h, c in (vcm.get("def") or {}).items() if h in keep and c in keep},
-                                  "abbr": vcm.get("abbr") or {}}})
+    # 皮膚科常用碼清單（v15 起取代「皮膚科子集範圍」：子集讓非皮膚科查詢拿到子集裡的錯碼）。
+    # 名稱從官方列帶入；查不到的碼記在 missing，由閘門 9 擋下（不在這裡默默丟掉）。
+    by_code = {r[0]: r for r in cm_rows}
+    groups, missing, n_common = [], [], 0
+    for g in common["groups"]:
+        codes = []
+        for c in g["codes"]:
+            c = str(c)
+            if c in by_code:
+                codes.append(by_code[c][:4])
+            else:
+                missing.append(c)
+        n_common += len(codes)
+        groups.append({"name": g["name"], "codes": codes})
+    write("derm_common.json", {"draft": bool(common.get("draft")), "groups": groups, "missing": missing})
 
     # ★ 詳細頁分片（依首字母）：代碼頁原本要載 cm.json＋vocab_cm.json（原始 24 MB、gz 2.7 MB），
     #   線上首次開 #/c/L40.0 實測 vocab_cm.json 就花 56 秒。同一碼的祖先、子孫、入口詞都在同首字母內。
@@ -164,7 +158,7 @@ def main() -> int:
     meta = {
         "built": date.today().isoformat(),
         "counts": {"cm": len(cm_rows), "cm_billable": sum(1 for r in cm_rows if r[3] == 1),
-                   "pcs": len(pcs_rows), "derm": len(keep),
+                   "pcs": len(pcs_rows), "derm_common": n_common,
                    "vocab_cm": len(vcm["t"]), "vocab_pcs": len(vpcs["t"]),
                    "catastrophic": len(codes)},
         "sources": {
@@ -182,7 +176,7 @@ def main() -> int:
 
     total = sum(p.stat().st_size for p in SITE.rglob("*.json"))
     n_files = sum(1 for _ in SITE.rglob("*.json"))
-    print(f"  site/: {n_files} 檔、{total/1e6:.1f} MB｜皮膚科子集 {len(keep):,} 碼"
+    print(f"  site/: {n_files} 檔、{total/1e6:.1f} MB｜皮膚科常用 {n_common} 碼"
           f"｜指紋 {meta['data_fingerprint']}")
     return 0
 

@@ -4,6 +4,7 @@ import { href } from '../lib/routes.js';
 import { getPrefs, pushUsed, toggleFav } from '../lib/storage.js';
 import { copyCode } from '../lib/clip.js';
 import { cmCode } from '../lib/search/query.js';
+import { applyFacets, facetCounts, FACET_LABEL } from '../lib/search/facets.js';
 import { NOTE_LABEL, SRC_LABEL, ST_LABEL } from './labels.js';
 
 /**
@@ -32,7 +33,8 @@ export default function CodeDetail({ code: raw }) {
       const ancestors = [];
       for (let p = parentOf(code); p; p = parentOf(p)) ancestors.unshift(byCode.get(p));
       const children = all.filter((r) => r[0] !== code && r[0].startsWith(code) && parentOf(r[0]) === code);
-      const nDesc = all.filter((r) => r[0] !== code && r[0].startsWith(code)).length;
+      const desc = all.filter((r) => r[0] !== code && r[0].startsWith(code));
+      const nDesc = desc.length;
       const entries = vocab.t.filter((v) => v[1] === code).map((v) => ({ text: v[0], src: vocab.src[v[2]], inc: v[3] & 1 }));
       const cat3 = code.slice(0, 3);
       const ch = tree.chapters.find((c) => cat3 >= c.first && cat3 <= c.last);
@@ -42,7 +44,7 @@ export default function CodeDetail({ code: raw }) {
       if (uis?.length) { const m = await load('mesh.json').catch(() => ({})); mesh = uis.map((u) => [u, m[u]]).filter((x) => x[1]); }
       const inherited = ancestors.map((a) => [a[0], nodes[a[0]]?.n]).filter((x) => x[1]);
       if (alive) {
-        setSt({ loading: false, row: all[i], ancestors, children, nDesc, entries, ch, sec, node: nodes[code] ?? {}, inherited, cat: cat.codes[code], catInfo: cat, mesh });
+        setSt({ loading: false, row: all[i], ancestors, children, desc, nDesc, entries, ch, sec, node: nodes[code] ?? {}, inherited, cat: cat.codes[code], catInfo: cat, mesh });
       }
     })().catch((e) => alive && setSt({ loading: false, error: e.message }));
     return () => { alive = false; };
@@ -135,6 +137,8 @@ export default function CodeDetail({ code: raw }) {
         </section>
       )}
 
+      <DescFilter desc={st.desc} />
+
       {st.node.x7 && (
         <section className="rounded-xl border border-slate-200 bg-white p-4">
           <h2 className="font-medium mb-2">第 7 碼（就醫階段）</h2>
@@ -190,6 +194,59 @@ export default function CodeDetail({ code: raw }) {
         </section>
       )}
     </article>
+  );
+}
+
+/**
+ * 下層可申報碼篩選器（外傷的側別＋就醫階段、膝骨關節炎的側別…）：
+ * 用結果頁同一套 facets 規則，點幾下就縮到要的那一碼，不必在幾十個碼裡找。
+ * 只在可申報子孫碼 > 8、且至少一個限定詞有兩種以上的值時出現。
+ */
+function DescFilter({ desc }) {
+  const [sel, setSel] = useState({});
+  const bill = useMemo(() => (desc ?? []).filter((r) => r[3] === 1).map((r) => ({ code: r[0], zh: r[1], en: r[2], use: r[3] })), [desc]);
+  const facets = useMemo(() => Object.entries(facetCounts(bill)).filter(([k, v]) => k !== 'use' && v.length >= 2), [bill]);
+  if (bill.length <= 8 || !facets.length) return null;
+  const items = applyFacets(bill, sel);
+  return (
+    <section className="rounded-xl border border-brand-100 bg-white p-4 space-y-2" data-testid="desc-filter">
+      <h2 className="font-medium">快速選碼<span className="ml-2 text-xs font-normal text-slate-500">依限定詞篩選 {bill.length} 個可申報下層碼</span></h2>
+      {facets.map(([k, vals]) => (
+        <div key={k} className="flex flex-wrap items-center gap-1 text-xs">
+          <span className="w-14 text-slate-500">{FACET_LABEL[k]}</span>
+          {vals.map(([v, n]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setSel((s) => ({ ...s, [k]: s[k] === v ? null : v }))}
+              className={`px-2 py-0.5 rounded-full border ${sel[k] === v ? 'bg-brand-700 text-white border-brand-700' : 'border-slate-300 bg-white hover:bg-slate-50'}`}
+            >
+              {v} <span className="opacity-60">{n}</span>
+            </button>
+          ))}
+        </div>
+      ))}
+      {items.length === 1 ? (
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 flex flex-wrap items-baseline gap-x-3 gap-y-1" data-testid="desc-one">
+          <a href={href.c(items[0].code)} className="code text-xl font-semibold text-brand-900 underline">{items[0].code}</a>
+          <span>{items[0].zh}</span>
+          <span className="text-xs text-slate-500">{items[0].en}</span>
+          <button type="button" onClick={() => copyCode(items[0])} className="ml-auto text-sm px-2.5 py-1 rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50">複製</button>
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-100 text-sm max-h-80 overflow-y-auto">
+          {items.slice(0, 60).map((it) => (
+            <li key={it.code} className="py-1 flex gap-2 items-baseline">
+              <a href={href.c(it.code)} className="code text-brand-700 w-24 shrink-0 hover:underline">{it.code}</a>
+              <span className="flex-1 min-w-0">{it.zh}<span className="ml-2 text-xs text-slate-500">{it.en}</span></span>
+              <button type="button" onClick={() => copyCode(it)} className="shrink-0 text-xs px-2 py-0.5 rounded-lg border border-slate-200 text-slate-500 hover:text-brand-700">複製</button>
+            </li>
+          ))}
+          {items.length > 60 && <li className="py-1 text-xs text-slate-500">…另 {items.length - 60} 碼，請再選限定詞</li>}
+          {items.length === 0 && <li className="py-1 text-xs text-slate-500">沒有符合的碼，請取消某個條件</li>}
+        </ul>
+      )}
+    </section>
   );
 }
 

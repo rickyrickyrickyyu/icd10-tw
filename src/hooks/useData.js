@@ -108,40 +108,53 @@ export async function namesFor(codes, pcs = false) {
 }
 
 /**
- * 首載：meta + 皮膚科子集（約 180 KB gz）並立刻建索引；
- * 全庫（CM 約 2.7 MB gz）與 PCS 等使用者切換範圍才載。
+ * 首載（v15 起一律全科）：
+ *   1. meta＋皮膚科常用碼清單（幾 KB）→ 首頁、常用清單、代碼頁馬上能用
+ *   2. 背景下載全 CM（cm.json＋vocab_cm.json 約 3.5 MB gz，PWA 之後走快取）並建索引（1–2 秒）
+ * v14 以前首載皮膚科子集：非皮膚科查詢在子集裡會以高分命中錯碼（heart failure → A52.06 梅毒），
+ * 靠「改查全庫」規則補救仍有 2–3% 落差，使用者決定拿掉子集。
+ * PCS 等使用者切換才載。
  */
 export function useCore() {
-  const [s, setS] = useState({ loading: true, error: null, meta: null, scope: 'derm', eng: null, building: false });
+  const [s, setS] = useState({
+    loading: true, error: null, meta: null, common: null, scope: 'cm', eng: null, building: true, buildingPcs: false, buildMs: null,
+  });
   const engines = useRef({});
   const rowsByCode = useRef(new Map());
 
   useEffect(() => {
     let alive = true;
-    Promise.all([getJson('meta.json'), getJson('derm.json')])
-      .then(([meta, derm]) => {
+    Promise.all([getJson('meta.json'), getJson('derm_common.json').catch(() => null)])
+      .then(([meta, common]) => alive && setS((x) => ({ ...x, loading: false, meta, common })))
+      .catch((e) => alive && setS((x) => ({ ...x, loading: false, building: false, error: e.message })));
+    Promise.all([load('cm.json'), load('vocab_cm.json')])
+      .then(async ([rows, vocab]) => {
+        // 讓「載入全部診斷中…」先畫出來再做 1–2 秒的索引建置
+        await new Promise((r) => setTimeout(r, 30));
         if (!alive) return;
-        engines.current.derm = new Engine(derm.rows, derm.vocab);
-        for (const r of derm.rows) rowsByCode.current.set(r[0], r);
-        setS((x) => ({ ...x, loading: false, meta, eng: engines.current.derm }));
+        const t0 = performance.now();
+        const eng = new Engine(rows.rows, vocab, { kind: 'cm' });
+        for (const r of rows.rows) rowsByCode.current.set(r[0], r);
+        engines.current.cm = eng;
+        const buildMs = Math.round(performance.now() - t0);
+        setS((x) => ({ ...x, building: false, buildMs, eng: x.scope === 'cm' ? eng : x.eng }));
       })
-      .catch((e) => alive && setS((x) => ({ ...x, loading: false, error: e.message })));
+      .catch((e) => alive && setS((x) => ({ ...x, building: false, error: e.message })));
     return () => { alive = false; };
   }, []);
 
   const setScope = useCallback(async (scope) => {
     if (engines.current[scope]) { setS((x) => ({ ...x, scope, eng: engines.current[scope] })); return; }
-    setS((x) => ({ ...x, building: true }));
+    // CM 還在背景建索引：只切範圍，建好時自動套用（不重複載入）
+    if (scope === 'cm') { setS((x) => ({ ...x, scope, eng: null })); return; }
+    setS((x) => ({ ...x, buildingPcs: true }));
     try {
-      const [rowsFile, vocabFile] = scope === 'pcs' ? ['pcs.json', 'vocab_pcs.json'] : ['cm.json', 'vocab_cm.json'];
-      const [rows, vocab] = await Promise.all([load(rowsFile), load(vocabFile)]);
-      // 讓 spinner 先畫出來再做 1–2 秒的索引建置
+      const [rows, vocab] = await Promise.all([load('pcs.json'), load('vocab_pcs.json')]);
       await new Promise((r) => setTimeout(r, 30));
-      engines.current[scope] = new Engine(rows.rows, vocab, { kind: scope === 'pcs' ? 'pcs' : 'cm' });
-      if (scope !== 'pcs') for (const r of rows.rows) rowsByCode.current.set(r[0], r);
-      setS((x) => ({ ...x, scope, eng: engines.current[scope], building: false }));
+      engines.current.pcs = new Engine(rows.rows, vocab, { kind: 'pcs' });
+      setS((x) => ({ ...x, scope, eng: engines.current.pcs, buildingPcs: false }));
     } catch (e) {
-      setS((x) => ({ ...x, building: false, error: e.message }));
+      setS((x) => ({ ...x, buildingPcs: false, error: e.message }));
     }
   }, []);
 

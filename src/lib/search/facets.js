@@ -24,6 +24,16 @@ const CMP = [
   [/\bwith (complication|complications)\b/i, '伴有併發症'],
 ];
 
+// 骨折（v15 代碼頁快速選碼）：S72.0 選「右側＋初次照護」後仍有 36 碼，差在開放／閉鎖、有無移位
+const FX = [
+  [/\bopen fracture\b/i, '開放性'],
+  [/\bclosed fracture\b/i, '閉鎖性'],
+];
+const DSP = [
+  [/\bnondisplaced\b/i, '無移位'],
+  [/\bdisplaced\b/i, '移位'],
+];
+
 const first = (rules, s) => rules.find(([re]) => re.test(s))?.[1] ?? null;
 
 export function facetsOf(item) {
@@ -34,10 +44,12 @@ export function facetsOf(item) {
     enc: first(ENC, en),
     acu: first(ACU, en),
     cmp: first(CMP, en),
+    fx: first(FX, en),
+    dsp: first(DSP, en),
   };
 }
 
-export const FACET_LABEL = { use: '申報', lat: '側別', enc: '就醫階段', acu: '病程', cmp: '併發症' };
+export const FACET_LABEL = { use: '申報', lat: '側別', enc: '就醫階段', acu: '病程', cmp: '併發症', fx: '骨折型態', dsp: '移位' };
 
 /** 統計目前結果的各 facet 值 → {key: [[值, 筆數], ...]}，只回傳至少兩個值的 facet。 */
 export function facetCounts(items) {

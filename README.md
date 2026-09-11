@@ -23,7 +23,8 @@
 - 入口詞 CM 262,385 條、PCS 71,805 條（17 個來源，見[詞彙層](#詞彙層入口詞來源)）
 - 2014→2023 對應（去掉恆等列後 CM 2,137／PCS 5,065 個舊碼）、ICD-9→2023（CM 12,384／PCS 3,377）
 - 重大傷病 3,091 碼、29 類
-- 首載 gzip 226 KB（皮膚科子集 5,350 碼）；全庫懶載約 2.7 MB gz；離線單檔 8.9 MB
+- 首載只有 meta＋皮膚科常用碼清單（幾 KB，首頁馬上能用）；全庫 CM 約 3.5 MB gz 在背景下載並建索引（桌機約 2 秒，PWA 之後走快取）；離線單檔約 9 MB
+- v15 起**一律查全部 CM**（v14 以前預設皮膚科子集，見 v14／v15 說明）
 
 ## 30 秒定位
 
@@ -52,7 +53,7 @@ pnpm dev          # http://localhost:5193/icd10-tw/
 終端機（`~/Developer/local_LLM/bin/icd`，setup.sh symlink 到 `~/.local/bin/icd`）：
 
 ```bash
-icd 皮蛇                 # 先查皮膚科，沒有再自動查全部 CM
+icd 皮蛇                 # 查全部 CM（v15 起沒有皮膚科子集；--all 仍接受、無作用）
 icd "herpes zoster eye"
 icd L40                  # 代碼詳細：可否申報、下層碼、重大傷病、Excludes
 icd 696.1                # ICD-9 → 2023
@@ -65,7 +66,16 @@ icd status | sync | update | offline | web | open
 |---|---|---|
 | 本機網頁 | `dist/`（`icd` 開的） | pipeline `pnpm build` |
 | 線上網頁 | GitHub Pages | `update.yml`（每週）或 push 觸發 `deploy.yml` |
-| 離線單檔 | `offline/icd10-tw-offline-YYYYMMDD.html` ＋ zip；GitHub Release | pipeline 最後一步 |
+| 離線單檔 | `offline/icd10-tw-offline-YYYYMMDD.html` ＋ zip；GitHub Release | pipeline 最後一步；Release 由 `update.yml`（資料有變，`data-*`）與 `deploy.yml`（前端有變，`app-*`）自動發 |
+
+**什麼時候哪個版本會更新**（v15 補齊兩個缺口）：
+
+| 版本 | 健保署資料更新 | 功能／介面更新（push） |
+|---|---|---|
+| 線上網頁 | `update.yml` 每週自動 | `deploy.yml` 自動 |
+| 本機 `icd`／dist／離線包（這台） | 下次執行 `icd` 自動同步 | 在這台開發，本來就是最新 |
+| 本機 `icd`（其他電腦） | 比對資料指紋 → 自動同步 | **v15 起**也比對 GitHub 上的 commit → 自動同步 |
+| GitHub Release 離線包 | `update.yml` 發 `data-YYYYMMDD` | **v15 起** `deploy.yml` 發 `app-YYYYMMDD-<sha>` |
 
 三者都從 `public/data/` 衍生，用 `data_fingerprint`（內容雜湊，排除 meta.json）綁在一起；
 `etl/check_offline.py` 在 promote **之後**檢查（放進 validate 會每次誤報）。
@@ -81,7 +91,10 @@ icd status | sync | update | offline | web | open
 - 沒變也重新部署，並把 `checked_at` 注入 dist 的 meta.json；網站上「最後自動檢查」超過 21 天會警告（= 排程壞了）。
 - 失敗 → 開 issue、上傳 staging，網站維持上一版。gate 1（表頭契約）失敗通常代表**健保署轉版**，要人工處理。
 - 重大傷病頁面有新版 → 開 issue，**不自動套用**（類別名稱要人工核對）。
-- 使用者端：PWA 換版自動重整一次（`swUpdate.js`）；本機 `icd` 啟動時每天比一次線上指紋，不一致就自動 `git pull` 重建。
+- 使用者端：PWA 換版自動重整一次（`swUpdate.js`）；本機 `icd` 啟動時每天比一次**線上資料指紋＋GitHub 上的 commit**
+  （v14 以前只比指紋 → 只改介面時其他電腦永遠不會更新），任一較新就自動 `git pull` 重建（工作區有未提交修改時略過）。
+- 功能更新：push 動到 `src/`、`index.html`、`vite.config.js`、`etl/build_offline.py` 時，`deploy.yml` 的 release job
+  重建離線包、跑 `check_offline.py`，發 `app-*` Release（v14 以前 Release 只在資料有變時才發，離線包會停在舊介面）。
 
 ## 搜尋設計（MeSH 式）
 
@@ -101,12 +114,17 @@ icd status | sync | update | offline | web | open
 | 自動完成每列**中文＋英文**（寬螢幕同一行、手機兩行） | 同名碼很多：L20 與 L20.9 中文都是「異位性皮膚炎」，只有英文 *unspecified* 分得出來 |
 | 查詢詞**標亮**（中文貪婪最長匹配、英文子字串） | 眼睛直接落在「為什麼是這筆」 |
 | 標題碼灰色＋「標題碼・不可申報」標記（結果頁 facet「申報：可申報」可一鍵濾掉） | 標題碼不能申報；不改引擎排序（基準 gold 常是標題碼本身） |
-| **皮膚科範圍查不到可信結果 → 自動改查全部 CM**，並提示「回皮膚科子集」；一開始打字就先下載全庫 | 預設範圍是皮膚科子集（首載快），非皮膚科疾病原本會拿到子集裡的錯碼（見 v14） |
-| 每列「**複製**」、⌘/Ctrl+Enter 複製選取列 | 查碼的終點是貼進 HIS，不必進詳細頁；舊瀏覽器退回 `execCommand` |
-| 搜尋框**空白聚焦列出最近用過的碼**（複製過或開過的可申報碼，12 筆）；首頁同步列出 | 醫師重複用的碼很集中 |
+| **一律查全部 CM**（v15）；另有「**皮膚科常用**」清單（`#/derm`，112 碼、14 類，`curation/derm_common.yaml`） | 皮膚科子集讓非皮膚科疾病拿到子集裡的錯碼（見 v14）；常用清單才是皮膚科醫師真正要的捷徑 |
+| 每列「**複製**」、⌘/Ctrl+Enter 複製選取列、**Alt/Option＋1–8** 複製第 N 列 | 查碼的終點是貼進 HIS，不必進詳細頁；舊瀏覽器退回 `execCommand`；不用純數字鍵（代碼本身有數字） |
+| **複製時提醒撰碼規則**：Code first／Use additional code／Code also（沿祖先鏈合併，`src/lib/codingNotes.js`） | 例：複製 E11.22 → 「須另加編碼：CKD 分期 (N18.1-N18.6)」 |
+| **批次查碼**（`#/batch`）：貼上多行診斷 → 每行前 5 名可選、↑↓ 排主次、一次複製；**Excludes1 衝突**與「須另加編碼（已包含／未包含）」提醒 | 出院病摘、轉診單一次查完。**不用 LLM**：每行直接跑同一個 `Engine.search`，文字不存、不上傳 |
+| 代碼頁「**快速選碼**」：依側別／就醫階段／病程／併發症篩選可申報下層碼，剩 1 碼時大字＋複製 | 外傷碼（S72.0 有上百個 7 碼）、M17 等側別碼不必逐一找 |
+| 搜尋框**空白聚焦列出最近用過的碼**（12 筆），沒有就列皮膚科常用第一類；首頁同步列出 | 醫師重複用的碼很集中 |
+| 常用碼**匯出／匯入**（`ICDTW1:` 開頭的一段文字） | localStorage 只在單一瀏覽器，換電腦要能搬 |
+| 「關於」頁「**查不到的關鍵字**」（本機記錄，可複製給維護者） | 補俗稱與同義詞的最直接來源 |
 | 任何頁面按 **/** 回搜尋框 | 連續查多個診斷不必碰滑鼠 |
 
-以上只存代碼與名稱於本機 localStorage，不存病人資訊。
+以上只存代碼、名稱、查詢字串於本機 localStorage，不存病人資訊；批次查碼貼上的文字只在頁面記憶體裡。
 
 UI：自動完成顯示「命中原因」、Search details、explode 開關、限定詞 facets（側別、就醫階段、病程、併發症、可否申報）、
 代碼頁（＝MeSH Descriptor 頁：樹狀位置、依來源分組的入口詞、Excludes/Code first/Use additional、第 7 碼、重大傷病、舊碼反查、MeSH Scope Note）。
@@ -161,7 +179,13 @@ UI：自動完成顯示「命中原因」、Search details、explode 開關、�
 | **v13** | **第三批新題 fresh（30 題）反覆測**：否定句降權（「未伴有敗血性休克」、"without septic shock"）、骨盆腔發炎／手汗症策展（目前 baseline） | 98.2／99.6 | 96.7／100 | 78.3／89.8 | 66.0／77.0 | 96.5／99.5 | 8.4 ms |
 | v14 | **查碼速度（引擎不動、上表分數不變）**：自動完成中英並列＋標亮、每列複製、最近用過的碼、「/」快捷鍵；**皮膚科範圍改查全庫的規則重寫**（見下） | 〃 | 〃 | 〃 | 〃 | 〃 | 8.8 ms |
 
-**v14 範圍切換（上表量的是各題組直接用對應引擎，量不到這個）**：網站預設皮膚科子集，
+| **v15** | **拿掉皮膚科子集、一律全庫**（使用者決定）；皮膚科常用清單、批次查碼（不用 LLM）、撰碼規則提醒與 Excludes1 衝突、快速選碼、常用碼匯出入、Alt+數字、查不到的關鍵字；deploy.yml 發 app Release、`icd` 比對 commit | 〃 | 〃 | 〃 | 〃 | 〃 | 〃 |
+
+**v15**：bench 本來就全部用全庫引擎量，所以上表分數不變；變的是實際使用路徑 ——
+v14 的「皮膚科範圍 → 改查全庫」規則仍比「永遠全庫」低 0.6 點（子集裡的錯誤 ATM：peptic ulcer → L88、mumps → L12.1），
+拿掉子集後網站就是「永遠全庫」那一欄。代價是首次開站要下載約 3.5 MB 並建索引約 2 秒（首頁與常用清單不必等）。
+
+**v14 範圍切換（v15 已移除，保留作為教訓）**：網站預設皮膚科子集，
 非皮膚科查詢要靠「子集結果不可信 → 改查全庫」這條規則（`src/lib/search/scope.js`，CLI 共用）。
 舊規則「非 ATM 且分數 < 5」擋不住：子集裡沒有心臟科的碼，heart failure 以 14.59 分命中 A52.06（心血管梅毒）。
 改成「第一名不是 ATM 就改查全庫」後，實際使用路徑（皮膚科範圍送出查詢）的第 1 名正確率：
@@ -270,10 +294,13 @@ clinical 剩下的失分幾乎全是俗稱／縮寫（皮蛇、香港腳、BCC�
   cm.json（14.5 MB）、pcs.json（11.7 MB）、vocab_cm.json、以及詳細頁分片（合計原始約 98 MB），
   git 歷史每次約增加數十 MB（JSON 壓縮率高，實際較少）。
   詞彙層刻意每月才更新一次就是為了壓低這個成長。若日後 repo 太大，可改成 CI 從 raw 重建、public/data 不進版控。
-- 首次載入只建皮膚科子集的索引；切「全部診斷」要在瀏覽器建全庫索引（桌機約 2 秒、記憶體約 110 MB）。
+- 首次開站要下載全庫（約 3.5 MB gz）並在瀏覽器建索引（桌機約 2 秒、記憶體約 110 MB）；首頁、皮膚科常用、代碼頁不必等。
+  若手機上明顯卡頓，下一步是把 Engine 建置搬進 Web Worker（目前主執行緒）。
+- 皮膚科常用清單由 Claude 草擬（`draft: true`），頁面標示「待醫師審閱」；審完把 `draft` 改 false 即移除提示。
 
 ## 安全與隱私
 
 - 公開 repo：一鍵更新與 CI 只 `git add` 資料管線路徑，推送前跑 `bin/pre_push_check.py`（路徑白名單＋個資樣式掃描）。
-- 常用碼、最近查詢只存 localStorage，不含病人資訊；本站不收集任何資料（CSP `connect-src 'self'`）。
+- 常用碼、最近查詢、查不到的關鍵字只存 localStorage，不含病人資訊；本站不收集任何資料（CSP `connect-src 'self'`）。
+- 批次查碼貼上的診斷文字只存在頁面記憶體（React state），不寫 localStorage、不進網址、不連網；關掉分頁就沒了。
 - 資料授權與顯名見 `DATA_LICENSE.md`。

@@ -109,11 +109,19 @@ def run() -> list[Gate]:
                   f"{cat['codes']:,} 碼｜主檔查無 {cat['n_missing']}｜未命名類別 {cat['categories_unnamed']}"
                   f"｜sha {'✓' if cat['sha256'] == cat['sha_expected'] else '✗ 與 catastrophic.yaml 不符'}"))
 
-    # 9 首載子集大小
-    derm = SITE / "derm.json"
-    gz = len(gzip.compress(derm.read_bytes())) // 1024
-    n_derm = len(J(derm)["rows"])
-    g.append(Gate(9, "皮膚科子集首載", gz < 400 and n_derm > 3000, f"{n_derm:,} 碼｜gzip {gz} KB（上限 400）"))
+    # 9 皮膚科常用碼清單（首載）：碼存在、可申報、不重複、檔案夠小
+    dc_path = SITE / "derm_common.json"
+    dc = J(dc_path)
+    gz = len(gzip.compress(dc_path.read_bytes())) // 1024
+    dc_codes = [r[0] for grp in dc["groups"] for r in grp["codes"]]
+    not_bill = [r[0] for grp in dc["groups"] for r in grp["codes"] if r[3] != 1]
+    dups = sorted({c for c in dc_codes if dc_codes.count(c) > 1})
+    ok9 = not dc["missing"] and not not_bill and not dups and gz < 50 and len(dc_codes) >= 30
+    g.append(Gate(9, "皮膚科常用碼清單", ok9,
+                  f"{len(dc_codes)} 碼／{len(dc['groups'])} 類｜gzip {gz} KB（上限 50）"
+                  + (f"｜查無 {dc['missing']}" if dc["missing"] else "")
+                  + (f"｜不可申報 {not_bill}" if not_bill else "")
+                  + (f"｜重複 {dups}" if dups else "")))
 
     # 10 詞彙目標碼有效（ICD-9 不可能混進主索引：主索引的碼必須全是 2023 CM）
     vcm, vpcs = J(STAGING / "vocab_cm.json"), J(STAGING / "vocab_pcs.json")

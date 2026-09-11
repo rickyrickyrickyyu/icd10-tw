@@ -1,8 +1,13 @@
-/** 關於本站：資料來源、授權與顯名、搜尋原理、免責。 */
+import { useState } from 'react';
+import { clearMisses, getPrefs } from '../lib/storage.js';
+import { href } from '../lib/routes.js';
+
+/** 關於本站：資料來源、授權與顯名、搜尋原理、免責、查不到的關鍵字。 */
 export default function About({ meta }) {
   const s = meta?.sources ?? {};
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 space-y-4">
+      <Misses />
       <section>
         <h1 className="text-lg font-semibold">關於本站</h1>
         <p>非官方工具。代碼、名稱與是否可申報，一律以<b>衛生福利部中央健康保險署</b>最新公告為準；申報結果由使用者自行負責。</p>
@@ -39,5 +44,29 @@ export default function About({ meta }) {
         <p>程式碼 MIT；資料層授權見 repo 的 DATA_LICENSE.md。本站不收集任何個人資料，常用碼只存在你的瀏覽器。</p>
       </section>
     </article>
+  );
+}
+
+/**
+ * 查不到（或結果不可信）的關鍵字：只存在這台裝置。複製給維護者後可補進俗稱／同義詞，
+ * 搜尋會越用越準。放在「關於」頁最上面，但沒有資料時不顯示。
+ */
+function Misses() {
+  const [list, setList] = useState(() => getPrefs().misses);
+  const [msg, setMsg] = useState('');
+  if (!list.length) return null;
+  return (
+    <section className="rounded-lg border border-amber-200 bg-amber-50 p-3" data-testid="misses">
+      <h2 className="font-medium">查不到的關鍵字（{list.length}）</h2>
+      <p className="text-xs text-slate-600">只記在這台裝置、不上傳。複製給維護者，確認後會加進俗稱／同義詞。</p>
+      <p className="mt-1.5 flex flex-wrap gap-1.5">
+        {list.map((q) => <a key={q} href={href.q(q)} className="px-1.5 rounded bg-white border border-amber-200 text-slate-700">{q}</a>)}
+      </p>
+      <p className="mt-2 flex gap-3 text-xs">
+        <button type="button" className="underline" onClick={() => navigator.clipboard?.writeText(list.join('\n')).then(() => setMsg('已複製'), () => setMsg('複製失敗'))}>複製清單</button>
+        <button type="button" className="underline text-slate-500" onClick={() => { setList(clearMisses().misses); setMsg(''); }}>清除</button>
+        {msg && <span className="text-emerald-700">{msg}</span>}
+      </p>
+    </section>
   );
 }

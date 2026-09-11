@@ -17,7 +17,7 @@
   "map9_pcs": "cfbf7c8e5ba13c971ab3cd1b84814f6d15d11edec8be16e496b9d0098b74f8b7"
  },
  "vocab_cm": 262388,
- "data_fingerprint": "2b182bf966d32eea",
+ "data_fingerprint": "fbb474a58dcc86d8",
  "sources": {
   "nhi": {
    "cm": {
@@ -111,9 +111,9 @@
   },
   {
    "id": 9,
-   "name": "皮膚科子集首載",
+   "name": "皮膚科常用碼清單",
    "passed": true,
-   "message": "5,350 碼｜gzip 237 KB（上限 400）",
+   "message": "112 碼／14 類｜gzip 3 KB（上限 50）",
    "overridden": false
   },
   {
@@ -127,7 +127,7 @@
    "id": 11,
    "name": "詞彙量健檢",
    "passed": true,
-   "message": "262,388（上期 262386）｜各來源 {'cdc-idx': 114632, 'cdc-see': 11212, 'cdc-incl': 10530, 'cdc-neo': 9012, 'doid': 10186, 'doid-rel': 195, 'mesh': 20596, 'zh14': 65339, 'zh9': 10221, 'en9': 9159, 'naer': 1103, 'wd': 8903, 'wd-alias': 50216, 'cur-zh': 50, 'cur-abbr': 31, 'fix-zh': 7, 'cms-idx': 12801}",
+   "message": "262,388（上期 262388）｜各來源 {'cdc-idx': 114632, 'cdc-see': 11212, 'cdc-incl': 10530, 'cdc-neo': 9012, 'doid': 10186, 'doid-rel': 195, 'mesh': 20596, 'zh14': 65339, 'zh9': 10221, 'en9': 9159, 'naer': 1103, 'wd': 8903, 'wd-alias': 50216, 'cur-zh': 50, 'cur-abbr': 31, 'fix-zh': 7, 'cms-idx': 12801}",
    "overridden": false
   },
   {
@@ -162,7 +162,7 @@
    "id": 15,
    "name": "資料指紋",
    "passed": true,
-   "message": "2b182bf966d32eea vs meta 2b182bf966d32eea",
+   "message": "fbb474a58dcc86d8 vs meta fbb474a58dcc86d8",
    "overridden": false
   }
  ]

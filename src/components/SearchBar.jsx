@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { go, href } from '../lib/routes.js';
 import { getPrefs } from '../lib/storage.js';
-import { load } from '../hooks/useData.js';
 import { copyCode } from '../lib/clip.js';
-import { isWeak } from '../lib/search/scope.js';
 import { SRC_LABEL } from './labels.js';
 import Hl from './Hl.jsx';
 
@@ -13,8 +11,9 @@ const LIMIT = 8;
  * 搜尋框＋自動完成（仿 MeSH Browser）。為了讓醫師最少步驟拿到碼：
  * - 每列中文＋英文（同名碼如 L20／L20.9「異位性皮膚炎」靠英文 unspecified 才分得出來）
  * - 查詢詞標亮、標題碼（不可申報）灰色＋標記、★ 預設碼、常用碼標記
- * - 每列「複製」不必進詳細頁；⌘/Ctrl+Enter 複製選取列（沒選就第一列）
- * - 空白聚焦列出最近用過的碼；任何頁面按「/」回搜尋框
+ * - 每列「複製」不必進詳細頁；⌘/Ctrl+Enter 複製選取列、Alt/Option+1–8 複製第 N 列
+ *   （不用純數字鍵：代碼本身有數字，會跟打 L40.0 衝突）
+ * - 空白聚焦：最近用過的碼；沒有就列皮膚科常用碼第一類。任何頁面按「/」回搜尋框
  */
 export default function SearchBar({ core, initial }) {
   const [q, setQ] = useState(initial ?? '');
@@ -24,16 +23,6 @@ export default function SearchBar({ core, initial }) {
   const pcs = core.scope === 'pcs';
 
   useEffect(() => { setQ(initial ?? ''); }, [initial]);
-
-  // 在皮膚科範圍一開始打字就先抓全庫資料（只下載不建索引）：非皮膚科查詢會自動改查全庫，
-  // 等到那時才下載 2.7 MB 會多卡好幾秒。load() 有快取，重複呼叫不會重抓。
-  const prefetched = useRef(false);
-  useEffect(() => {
-    if (prefetched.current || core.scope !== 'derm' || !q.trim()) return;
-    prefetched.current = true;
-    load('cm.json').catch(() => {});
-    load('vocab_cm.json').catch(() => {});
-  }, [q, core.scope]);
 
   // 「/」從任何地方跳回搜尋框（GitHub／Gmail 慣例）
   useEffect(() => {
@@ -49,22 +38,19 @@ export default function SearchBar({ core, initial }) {
     return () => window.removeEventListener('keydown', on);
   }, []);
 
-  const recentMode = open && !q.trim();
-  const { sugg, weak } = useMemo(() => {
-    if (!open) return { sugg: [], weak: false };
+  const { sugg, head } = useMemo(() => {
+    if (!open) return { sugg: [], head: null };
     if (!q.trim()) {
-      return {
-        sugg: getPrefs().used.filter((u) => Boolean(u.p) === pcs).slice(0, LIMIT).map((u) => ({ code: u.c, zh: u.zh, en: u.en })),
-        weak: false,
-      };
+      const used = getPrefs().used.filter((u) => Boolean(u.p) === pcs).slice(0, LIMIT).map((u) => ({ code: u.c, zh: u.zh, en: u.en }));
+      if (used.length) return { sugg: used, head: '最近用過的碼' };
+      const g = !pcs && core.common?.groups?.[0];
+      return g
+        ? { sugg: g.codes.slice(0, LIMIT).map(([code, zh, en, use]) => ({ code, zh, en, use })), head: `皮膚科常用：${g.name}（更多在「皮膚科常用」）` }
+        : { sugg: [], head: null };
     }
-    if (!core.eng) return { sugg: [], weak: false };
-    try {
-      const r = core.eng.search(q, { limit: LIMIT });
-      // 打字中途（「異」一個字）也會弱 → 下拉只給按鈕，不自動切；送出後結果頁才自動切
-      return { sugg: r.items, weak: core.scope === 'derm' && q.trim().length >= 2 && isWeak(r) };
-    } catch { return { sugg: [], weak: false }; }
-  }, [q, open, core.eng, core.scope, pcs]);
+    if (!core.eng) return { sugg: [], head: core.building ? '載入全部診斷中…' : null };
+    try { return { sugg: core.eng.search(q, { limit: LIMIT }).items, head: null }; } catch { return { sugg: [], head: null }; }
+  }, [q, open, core.eng, core.common, core.building, pcs]);
   const fav = useMemo(() => new Set(open ? getPrefs().fav : []), [open]);
 
   const submit = (text) => {
@@ -96,6 +82,13 @@ export default function SearchBar({ core, initial }) {
               const it = sugg[sel >= 0 ? sel : 0];
               if (it) copyCode(it, it.code, pcs);
             }
+            // Alt/Option+1–8：用 e.code 判斷（Mac 的 Option+1 會產生「¡」，e.key 不是數字）
+            const d = e.altKey && /^Digit([1-8])$/.exec(e.code);
+            if (d && open) {
+              e.preventDefault();
+              const it = sugg[Number(d[1]) - 1];
+              if (it) copyCode(it, it.code, pcs);
+            }
           }}
           placeholder="疾病中文／英文、俗稱、縮寫、代碼（L40.0、L400）、舊碼、ICD-9（696.1）"
           aria-label="搜尋 ICD-10"
@@ -103,28 +96,18 @@ export default function SearchBar({ core, initial }) {
           className="w-full rounded-xl border border-slate-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
         />
       </form>
-      {open && (sugg.length > 0 || weak) && (
+      {open && (sugg.length > 0 || head) && (
         <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-30" data-testid="suggest">
-          {recentMode && <p className="px-3 pt-2 pb-1 text-[11px] text-slate-400">最近用過的碼</p>}
-          {weak && (
-            <button
-              type="button"
-              onMouseDown={(e) => { e.preventDefault(); core.setScope('cm'); }}
-              className="w-full text-left px-3 py-1.5 text-xs bg-sky-50 text-sky-900 hover:bg-sky-100 border-b border-sky-100"
-              data-testid="weak-hint"
-            >
-              皮膚科子集沒有好的符合 → <b className="underline">改查全部診斷 CM</b>（或直接按 Enter，結果頁會自動改查）
-            </button>
-          )}
-          {core.building && <p className="px-3 py-1.5 text-xs text-slate-500">載入全部診斷中…</p>}
+          {head && <p className="px-3 pt-2 pb-1 text-[11px] text-slate-400" data-testid="suggest-head">{head}</p>}
           <ul role="listbox">
             {sugg.map((it, i) => (
               <li key={it.code} role="option" aria-selected={i === sel} className={`flex items-stretch ${i === sel ? 'bg-brand-50' : 'hover:bg-slate-50'}`}>
                 <button
                   type="button"
                   onMouseDown={(e) => { e.preventDefault(); pick(it); }}
-                  className="flex-1 min-w-0 text-left pl-3 pr-1 py-1.5 flex gap-2 items-baseline"
+                  className="flex-1 min-w-0 text-left pl-2 pr-1 py-1.5 flex gap-2 items-baseline"
                 >
+                  <span className="hidden sm:inline w-3 shrink-0 text-[10px] text-slate-300" aria-hidden="true">{i + 1}</span>
                   <span className={`code w-20 shrink-0 ${it.use === 0 ? 'text-slate-400' : 'text-brand-700'}`}>{it.code}</span>
                   <span className="flex-1 min-w-0">
                     <span className="block sm:flex sm:items-baseline sm:gap-2 min-w-0">
@@ -158,7 +141,7 @@ export default function SearchBar({ core, initial }) {
             ))}
           </ul>
           <p className="hidden sm:block px-3 py-1 text-[11px] text-slate-400 border-t border-slate-100 bg-slate-50">
-            ↑↓ 選擇　Enter 開詳細頁　⌘/Ctrl+Enter 複製代碼　任何頁面按 / 回到搜尋框
+            ↑↓ 選擇　Enter 開詳細頁　⌘/Ctrl+Enter 複製選取列　Alt/Option+數字 複製第 N 列　任何頁面按 / 回到搜尋框
           </p>
         </div>
       )}

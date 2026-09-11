@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { isWeak } from '../lib/search/scope.js';
+import { useEffect, useMemo, useState } from 'react';
 import { load, loadMap14, loadMap9 } from '../hooks/useData.js';
-import { getPrefs, pushRecent } from '../lib/storage.js';
+import { getPrefs, pushMiss, pushRecent } from '../lib/storage.js';
 import { href } from '../lib/routes.js';
 import { applyFacets, facetCounts, FACET_LABEL } from '../lib/search/facets.js';
 import { parseQuery } from '../lib/search/query.js';
+import { queryCoverage } from '../lib/coverage.js';
 import ResultRow from './ResultRow.jsx';
 import { SRC_LABEL } from './labels.js';
 
@@ -20,19 +20,6 @@ export default function Results({ core, q }) {
   const fav = useMemo(() => new Set(getPrefs().fav), [q]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setSel({}); pushRecent(q); }, [q]);
-
-  // 皮膚科子集查不到好結果 → 自動改查全部 CM（CLI 同一條規則）。
-  // 每個查詢只自動切一次：使用者按「回皮膚科」後不會又被切走。
-  const autoTried = useRef(new Set());
-  const [autoFrom, setAutoFrom] = useState(null);
-  useEffect(() => {
-    if (core.scope !== 'derm' || !core.eng || autoTried.current.has(q)) return;
-    const r = core.eng.search(q, { limit: 1 });
-    if (!isWeak(r)) return;
-    autoTried.current.add(q);
-    setAutoFrom(q);
-    core.setScope('cm');
-  }, [q, core.scope, core.eng]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load('cat.json').then(setCat).catch(() => {}); }, []);
 
   const res = useMemo(() => {
@@ -56,21 +43,21 @@ export default function Results({ core, q }) {
     }
   }, [q, core.scope, res]);
 
-  if (!res) return null;
+  // 查不到的關鍵字（只記本機，關於頁可複製給維護者補同義詞）：
+  // 0 筆，或第一名不是主題對應、且查詢字元出現在第一名名稱／命中詞裡不到一半
+  useEffect(() => {
+    if (!res || core.scope === 'pcs' || parseQuery(q).codes.length) return;
+    const top = res.items[0];
+    if (!top || (!top.atm && queryCoverage(q, `${top.zh} ${top.en} ${top.why?.text ?? ''}`) < 0.5)) pushMiss(q);
+  }, [res]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!res) return <p className="text-slate-500">{core.scope === 'pcs' ? '載入處置 PCS 中…' : '載入全部診斷中…（首次約數秒，之後會快取）'}</p>;
   const items = applyFacets(res.items, sel);
   const facets = facetCounts(res.items);
   const d = res.details;
 
   return (
     <div className="space-y-4">
-      {autoFrom === q && core.scope !== 'derm' && (
-        <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900" data-testid="auto-cm">
-          皮膚科子集沒有好的符合，已自動改查<b>全部診斷</b>。
-          <button type="button" className="ml-2 underline text-brand-700" onClick={() => core.setScope('derm')}>回皮膚科子集</button>
-        </p>
-      )}
-      {core.building && autoFrom === q && <p className="text-sm text-slate-500">皮膚科子集沒有好的符合，正在載入全部診斷…</p>}
-
       <SearchDetails d={d} res={res} explode={explode} setExplode={setExplode} scope={core.scope} />
 
       {old && <OldCodeBox old={old} />}
@@ -97,23 +84,12 @@ export default function Results({ core, q }) {
 
       {items.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-          查無結果。
-          {core.scope === 'derm' && (
-            <button type="button" className="ml-2 underline text-brand-700" onClick={() => core.setScope('cm')}>
-              改查全部診斷
-            </button>
-          )}
+          查無結果。可試試英文、同義詞，或到「關於」頁把查不到的關鍵字複製給維護者。
         </div>
       ) : (
         <ul className="rounded-xl border border-slate-200 bg-white px-3">
           {items.map((it) => <ResultRow key={it.code} it={it} pcs={core.scope === 'pcs'} cat={cat} q={q} fav={fav} />)}
         </ul>
-      )}
-      {core.scope === 'derm' && items.length > 0 && (
-        <p className="text-xs text-slate-500">
-          目前只查皮膚科子集。
-          <button type="button" className="underline text-brand-700 ml-1" onClick={() => core.setScope('cm')}>查全部診斷</button>
-        </p>
       )}
     </div>
   );
@@ -139,7 +115,7 @@ function SearchDetails({ d, res, explode, setExplode, scope }) {
   return (
     <details className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" open={d.mapped.length > 0 || d.corrections.length > 0 || d.expansions?.length > 0}>
       <summary className="cursor-pointer select-none text-slate-600">
-        {res.total.toLocaleString()} 筆｜{res.ms} ms｜{scope === 'derm' ? '皮膚科' : scope === 'pcs' ? 'PCS' : '全部 CM'}
+        {res.total.toLocaleString()} 筆｜{res.ms} ms｜{scope === 'pcs' ? 'PCS' : '全部 CM'}
         <span className="ml-2 text-slate-400">Search details</span>
       </summary>
       <div className="mt-2 space-y-1.5">

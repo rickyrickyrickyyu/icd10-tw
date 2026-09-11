@@ -16,6 +16,8 @@ export function parseHash(h = window.location.hash) {
     case 'changes': return { view: 'changes' };
     case 'about': return { view: 'about' };
     case 'fav': return { view: 'fav' };
+    case 'derm': return { view: 'derm', key: arg };       // 皮膚科常用碼清單（key = 類別序號，捲動到該類）
+    case 'batch': return { view: 'batch' };               // 批次貼上查碼（純本機）
     default: return { view: 'home' };
   }
 }
