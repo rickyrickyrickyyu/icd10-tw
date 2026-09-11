@@ -35,6 +35,7 @@ export const CONFIG = {
   gapWeight: 0.5,     // 中文跳一字字對的權重（0 = 關閉；v6 加入）
   manifestDemote: 0.9, // 「in diseases classified elsewhere」表現碼（v11）
   cdcDefBonus: 1.08,  // 整句命中時，CDC 字母索引直接給的碼（真正的預設碼）加分（v11）
+  negationDemote: 0.6, // 查詢詞在標題裡是被否定的（「未伴有敗血性休克」、"without septic shock"）（v13）
   prefixMin: 3,
   limit: 60,
 };
@@ -480,11 +481,13 @@ export class Engine {
   finish(score, details, text, limit) {
     // 標題碼 ×0.97（同分時可申報碼優先）；「歸類於他處疾病」的表現碼 ×0.9 —— 依撰碼規則
     // 它們不能當主診斷（要先編原發疾病），v10 查 pyelonephritis 曾讓 N16 排第一。
+    const neg = negationProbe(text);
     const adj = (d, v) => {
       if (v.why.kind === 'code') return v.s;
       let s = v.s;
       if (this.rows[d][3] === 0) s *= CONFIG.headerDemote;
       if (/classified elsewhere/i.test(this.rows[d][2])) s *= CONFIG.manifestDemote;
+      if (neg && negated(this.rows[d], neg)) s *= CONFIG.negationDemote;
       return s;
     };
     const items = [...score.entries()]
@@ -513,6 +516,35 @@ export class Engine {
     }
     return { kind: 'match', text: best[0], src: best[1] < 0 ? 'title' : this.srcNames[best[1]] };
   }
+}
+
+/**
+ * 否定判斷（v13）：新題實測「敗血性休克」第一名是 R65.20「未伴有敗血性休克的嚴重敗血症」——
+ * 標題含查詢字串，意思卻相反。只在「查詢整段」緊跟在否定詞之後時才算，避免誤傷。
+ */
+const ZH_NEG = ['未伴有', '未併有', '未合併', '無', '未', '非'];
+function negationProbe(text) {
+  const t = norm(text);
+  const zh = t.replace(/\s+/g, '');
+  const en = parts(text).en;
+  if (!zh && !en.length) return null;
+  return { zh: CJK.test(zh) ? zh : null, en: en.length ? en : null };
+}
+function negated(row, probe) {
+  if (probe.zh) {
+    const z = norm(row[1]).replace(/\s+/g, '');
+    const i = z.indexOf(probe.zh);
+    if (i > 0 && ZH_NEG.some((w) => z.slice(Math.max(0, i - w.length), i) === w)) return true;
+  }
+  if (probe.en) {
+    // 英文：查詢的所有詞都落在同一個 "without ..." 子句裡
+    const m = row[2].toLowerCase().match(/\bwithout\b([^,;]*)/);
+    if (m) {
+      const clause = new Set(parts(m[1]).en);
+      if (probe.en.every((w) => clause.has(w))) return true;
+    }
+  }
+  return false;
 }
 
 function dedupe(concepts) {

@@ -1,7 +1,7 @@
 packed_at: 2026-09-11
 data_built: 2026-09-11
-fingerprint: 0c50ecc261668311
-app_fingerprint: a2044673682b5171
+fingerprint: 2b182bf966d32eea
+app_fingerprint: 941bb393ffaf4c8b
 embedded_files: 90
-icd10-tw-offline-20260911.html  9054234 bytes  7df0e39744a939ba
-icd10-tw-offline-20260911.zip  6583366 bytes
+icd10-tw-offline-20260911.html  9053423 bytes  c49bd3a9eaa4375e
+icd10-tw-offline-20260911.zip  6582411 bytes

@@ -1,0 +1,35 @@
+# 第三批「沒調過參的新題」（2026-09-11 第二次要求反覆測試時新增），首測 Hit@1 27/30、前 3 名 28/30。
+# 失分 3 題（敗血性休克被「未伴有敗血性休克」搶走、骨盆腔發炎、手汗症）在 v13 修正後納入回歸鎖。
+# ⚠️ 由 Claude 草擬，gold 已由 run.mjs 核對存在於 2023 版；臨床判斷請抽查。
+items:
+  - {q: 阿茲海默症, gold: ["G30*"]}
+  - {q: alzheimer disease, gold: ["G30*"]}
+  - {q: 帕金森氏症, gold: ["G20*"]}
+  - {q: 主動脈剝離, gold: ["I71.0*"]}
+  - {q: aortic dissection, gold: ["I71.0*"]}
+  - {q: 肺水腫, gold: ["J81*"]}
+  - {q: 骨盆腔發炎, gold: [N73.9], tag: colloquial}
+  - {q: 肝膿瘍, gold: [K75.0]}
+  - {q: meningitis, gold: ["G03*", "G00*", "A87*"]}
+  - {q: 敗血性休克, gold: [R65.21], tag: negation}
+  - {q: septic shock, gold: [R65.21], tag: negation}
+  - {q: 急性心肌炎, gold: ["I40*"]}
+  - {q: 乳腺炎, gold: ["N61*", "O91*"]}
+  - {q: 睪丸扭轉, gold: ["N44.0*"]}
+  - {q: placenta previa, gold: ["O44*"]}
+  - {q: 產後憂鬱症, gold: ["F53*"]}
+  - {q: 過敏性紫斑, gold: [D69.0]}
+  - {q: 雷諾氏症, gold: ["I73.0*"]}
+  - {q: raynaud, gold: ["I73.0*"]}
+  - {q: 痛風石, gold: ["M1A*"]}
+  - {q: 骨肉瘤, gold: ["C40*", "C41*"]}
+  - {q: 猩紅熱, gold: ["A38*"]}
+  - {q: 輪狀病毒腸炎, gold: [A08.0]}
+  - {q: norovirus, gold: [A08.11]}
+  - {q: 腸病毒, gold: [B34.1]}
+  - {q: 手汗症, gold: [L74.512], tag: colloquial}
+  - {q: 帶狀疱疹後神經痛, gold: ["B02.2*"]}
+  - {q: 甲溝炎, gold: ["L03.0*"]}
+  - {q: cellulitis of face, gold: ["L03.21*"]}
+  - {q: 左側膝部骨關節炎, gold: [M17.12]}
+  - {q: severe sepsis without shock, gold: [R65.20], tag: negation}
