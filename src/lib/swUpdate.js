@@ -27,6 +27,9 @@ export function watchSwUpdate() {
   // 離線包沒有 sw.js；用 http 開（例如本機 http.server 預覽）時硬註冊會 404
   if (!sw || import.meta.env.DEV || window.__ICD_OFFLINE__) return;
 
+  // v12 以前的資料快取（NetworkFirst、無版本網址）會回舊資料，換成 icd-data-v2 後刪掉
+  window.caches?.delete('icd-data-v1').catch(() => {});
+
   // 註冊當下就有 controller = 這台裝置已經裝過舊版
   const hadController = Boolean(sw.controller);
 

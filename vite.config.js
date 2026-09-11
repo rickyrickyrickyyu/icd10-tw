@@ -75,13 +75,24 @@ export default defineConfig(({ mode }) => {
             },
           },
           {
-            urlPattern: /\/data\/.*\.json$/,
+            // meta.json 決定資料版本：網路優先，離線時才用快取
+            urlPattern: /\/data\/meta\.json/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'icd-data-v1',
-              networkTimeoutSeconds: 3,
-              // 對應檔依首字元分片（CM 26 + PCS 34，各兩種），留足空間免得 LRU 踢掉
-              expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheName: 'icd-meta-v2',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 4 },
+            },
+          },
+          {
+            // ★ 其他資料網址都帶 ?v=<指紋>，同一網址內容永不變 → CacheFirst。
+            //   v1 用 NetworkFirst＋3 秒逾時，慢網路會拿到舊版詞彙（見 useData.getJson）。
+            urlPattern: /\/data\/.*\.json\?v=/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'icd-data-v2',
+              // 分片多（nodes/map14/map9/detail/pdetail），留足空間；舊版本網址 90 天後自然淘汰
+              expiration: { maxEntries: 600, maxAgeSeconds: 60 * 60 * 24 * 90 },
             },
           },
         ],

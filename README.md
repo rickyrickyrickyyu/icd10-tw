@@ -200,6 +200,11 @@ clinical 剩下的失分幾乎全是俗稱／縮寫（皮蛇、香港腳、BCC�
 **部署**
 - GitHub runner（Ubuntu 24.04）系統 Python 是 externally-managed，`uv pip install --system` 被拒 →
   update.yml 先 `actions/setup-python`（首次上線那次自動更新就死在這步）。
+- **資料快取不能用 NetworkFirst＋逾時**：v12 以前 `data/*.json` 走 NetworkFirst（3 秒逾時），vocab_cm.json 在慢網路
+  超過 3 秒就回舊快取 → 線上實測「新程式＋舊詞彙」（縮寫展開失效）。改成資料網址帶 `?v=<指紋>`＋CacheFirst，
+  只有 meta.json 網路優先；舊的 `icd-data-v1` 快取在 swUpdate 刪掉。
+- **健保署會間歇性擋 GitHub runner**（nhi-drug-rules 2026-09-05 月更也失敗）→ update.yml 下載失敗時
+  soft-fail：不更新資料、照常部署、不注入 checked_at、只開一張 issue；急用在本機 `icd update`（台灣 IP）。
 - **健保署會 reset 連續大量下載**：第一版 update.yml 先 `--check` 抓 6 個 CSV、pipeline 又抓一次（約 240 MB），
   第二輪 `curl 56 Connection reset by peer` → 改成只下載一次、pipeline 用 `rebuild`，curl 加 `--retry-all-errors`。
 - 代碼詳細頁原本載 cm.json＋vocab_cm.json（原始 24 MB），線上首次開 `#/c/L40.0` 實測 **56 秒** →

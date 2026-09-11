@@ -24,13 +24,36 @@ async function gunzipB64(b64) {
   return JSON.parse(await new Response(stream).text());
 }
 
+/**
+ * ★ 資料網址帶版本（?v=<data_fingerprint>）：
+ *   v12 以前資料用 NetworkFirst（3 秒逾時），vocab_cm.json 在慢網路超過 3 秒就回舊快取 ——
+ *   實測線上「新程式＋舊詞彙」，BCC nose 的縮寫展開整個失效。帶版本後每一版網址不同，
+ *   SW 可以放心 CacheFirst（快又不可能拿到舊版）；只有 meta.json 走網路優先決定版本。
+ */
+let VERSION = null;
+async function version() {
+  if (VERSION) return VERSION;
+  const r = await fetch(`${BASE}/meta.json`, { cache: 'no-cache' });
+  if (!r.ok) throw new Error(`meta.json: HTTP ${r.status}`);
+  const m = await r.json();
+  VERSION = m.data_fingerprint ?? m.built ?? 'x';
+  return VERSION;
+}
+
 export async function getJson(path) {
   if (EMBEDDED) {
     const v = EMBEDDED[path];
     if (v === undefined) throw new Error(`${path}: 離線版未內嵌此資料`);
     return typeof v === 'string' ? gunzipB64(v) : v;
   }
-  const r = await fetch(`${BASE}/${path}`);
+  if (path === 'meta.json') {
+    const r = await fetch(`${BASE}/meta.json`, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`meta.json: HTTP ${r.status}`);
+    const m = await r.json();
+    VERSION = m.data_fingerprint ?? m.built ?? 'x';
+    return m;
+  }
+  const r = await fetch(`${BASE}/${path}?v=${await version()}`);
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
   return r.json();
 }

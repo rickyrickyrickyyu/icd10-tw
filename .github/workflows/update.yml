@@ -60,23 +60,36 @@ jobs:
 
       - name: 詞彙層快取（同月沿用）
         id: vocab
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data/raw/vocab
           key: vocab-${{ steps.month.outputs.ym }}
 
       # ★ 只下載一次：這一步就把 6 個 CSV 存進 data/raw 並比 sha，後面 pipeline 用 rebuild（不再下載）。
-      #   第一版先 --check 抓一遍、pipeline 又抓一遍（約 240 MB），健保署伺服器第二輪直接
-      #   Connection reset by peer（curl 56），自動更新失敗。
+      # ★ 健保署伺服器會間歇性 reset GitHub runner 的連線（curl 56）。連不上時「不更新資料、照常部署現有版本、
+      #   不注入 checked_at」—— 網站上的最後檢查日停住，超過 21 天自然會警告；不要每週都把 job 弄紅。
+      # ★ shell: bash 才有 pipefail；預設 bash -e 下 `| tee` 會吃掉 python 的失敗碼（第二次實測就這樣誤判成功）。
       - name: 下載健保資料並判斷有沒有變
         id: check
+        continue-on-error: true
+        shell: bash
         run: |
           python3 etl/fetch_csv.py | tee check.log
           echo "changed=$(grep -o 'CHANGED=[01]' check.log | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          echo "ok=1" >> "$GITHUB_OUTPUT"
 
       - name: 詞彙層（快取沒命中或強制才重抓）
-        if: steps.vocab.outputs.cache-hit != 'true' || inputs.force
+        id: vocabfetch
+        if: steps.check.outputs.ok == '1' && (steps.vocab.outputs.cache-hit != 'true' || inputs.force)
         run: python3 etl/fetch_vocab.py
+
+      # 立刻存快取，不等整個 job 成功（actions/cache 的 post-save 在後面步驟失敗時不會存，下次又得重抓 CDC）
+      - name: 存詞彙層快取
+        if: steps.vocabfetch.outcome == 'success' && steps.vocab.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/vocab
+          key: vocab-${{ steps.month.outputs.ym }}
 
       - name: 重大傷病對照表頁面檢查（Playwright；WAF 擋 curl）
         id: catas
@@ -91,7 +104,7 @@ jobs:
 
       - name: 完整 pipeline（有變才跑）
         id: pipe
-        if: steps.check.outputs.changed == '1' || steps.vocab.outputs.cache-hit != 'true' || inputs.force
+        if: steps.check.outputs.ok == '1' && (steps.check.outputs.changed == '1' || steps.vocab.outputs.cache-hit != 'true' || inputs.force)
         env:
           OVERRIDE: ${{ inputs.override_gate }}
         run: |
@@ -136,9 +149,12 @@ jobs:
             --notes "資料指紋 ${{ steps.commit.outputs.fp }}。離線版：下載 zip、解壓後雙擊 html。" || true
 
       # ★ GITHUB_TOKEN 的 push 不會觸發其他 workflow，所以 build+deploy 必須在這裡做
-      - name: 建置網站並注入 checked_at
+      - name: 建置網站並注入 checked_at（只有真的檢查成功才注入）
+        env:
+          CHECKED: ${{ steps.check.outputs.ok }}
         run: |
           pnpm build
+          [[ "$CHECKED" == "1" ]] || { echo "健保署連不上，沿用上次 checked_at"; exit 0; }
           python3 - <<'PY'
           import json, datetime, pathlib
           p = pathlib.Path('dist/data/meta.json')
@@ -159,6 +175,17 @@ jobs:
             await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo,
               title: '重大傷病對照表有新版',
               body: '健保署頁面上的對照表版本與 curation/catastrophic.yaml 不同。\n本機執行 `make catas` 下載、更新 yaml 的 file/sha256/version 與類別名稱後 `make rebuild`。' });
+
+      - name: 健保署連不上 → 開 issue（已有未關閉的同名 issue 就不重複開）
+        if: steps.check.outputs.ok != '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '健保署資料暫時抓不到（GitHub runner 連線被 reset）';
+            const open = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+            if (open.data.some((i) => i.title === title)) return;
+            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title,
+              body: `本週自動檢查下載失敗，網站維持上一版（未注入 checked_at，超過 21 天網站會警告）。\n通常下週會自己恢復；急用可在本機跑 \`icd update\`（台灣 IP 直連健保署）。\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` });
 
       - name: 失敗時開 issue
         if: failure()
