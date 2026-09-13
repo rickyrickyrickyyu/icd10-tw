@@ -14,6 +14,7 @@ import { facetsOf } from '../src/lib/search/facets.js';
 import { codesIn, excludes1Conflicts, matches, mergeNotes, reminders } from '../src/lib/codingNotes.js';
 import { parseLines } from '../src/lib/batch.js';
 import { queryCoverage } from '../src/lib/coverage.js';
+import { sideOf } from '../src/lib/search/side.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 let n = 0;
@@ -74,6 +75,21 @@ t('查不到的關鍵字：看覆蓋率不看分數（亂打的「qwxz怪皮病z
   assert.equal(queryCoverage('異位性皮膚炎', '異位性皮膚炎 Atopic dermatitis'), 1);
 });
 
+t('側別判斷：左／右／雙後面要接部位字才算；左右同時出現不套用', () => {
+  assert.equal(sideOf('右膝退化性關節炎').lat, '右側');
+  assert.equal(sideOf('雙膝退化性關節炎').lat, '雙側');
+  assert.equal(sideOf('左側網球肘').lat, '左側');
+  assert.equal(sideOf('雙極性情感疾患'), null);
+  assert.equal(sideOf('左心室肥大'), null);
+  assert.equal(sideOf('右束支傳導阻滯'), null);
+  assert.equal(sideOf('左側眼失明，右側眼低視力'), null);
+  const s = sideOf('cellulitis of left leg');
+  assert.equal(s.lat, '左側');
+  assert.equal(s.strip, 'cellulitis of leg');
+  assert.equal(s.sites.length, 1);
+  assert.equal(sideOf('left axillary abscess').strip, 'axilla abscess');
+});
+
 t('批次查碼切行：編號、Dx:、r/o、分號', () => {
   const r = parseLines('1. Type 2 DM\n2) r/o cellulitis of left leg；③ 異位性皮膚炎\nDx: L400\n\n');
   assert.deepEqual(r.map((x) => x.text), ['Type 2 DM', 'cellulitis of left leg', '異位性皮膚炎', 'L400']);
@@ -115,6 +131,20 @@ if (existsSync(cmPath)) {
   t('全庫：非皮膚科疾病第 1 名正確（v14 以前在皮膚科子集 heart failure → A52.06 梅毒）', () => {
     assert.ok(top('heart failure')[0].startsWith('I50'));
     assert.ok(top('三叉神經痛')[0].startsWith('G50.0'));
+  });
+  t('側別＋部位 → 可申報最末碼（v16）', () => {
+    assert.equal(top('右膝退化性關節炎')[0], 'M17.11');
+    assert.equal(top('cellulitis of left leg')[0], 'L03.116');
+    assert.equal(top('左小腿蜂窩性組織炎')[0], 'L03.116');
+    assert.equal(top('right knee osteoarthritis')[0], 'M17.11');
+    assert.equal(top('右耳耳鳴')[0], 'H93.11');
+  });
+  t('側別規則不能帶偏：ICD 不分側、或本身就沒有側別的碼（v16）', () => {
+    assert.equal(top('右側腹股溝疝氣')[0], 'K40.90');   // ICD 只有「單側」
+    assert.equal(top('左側顏面神經麻痺')[0], 'G51.0');   // Bell 氏麻痺本身不分側
+    assert.equal(top('左側腎結石')[0], 'N20.0');
+    assert.ok(top('雙極性情感疾患')[0].startsWith('F31'));  // 「雙」不是側別
+    assert.equal(top('左心室肥大')[0], 'I51.7');
   });
 } else {
   console.log('  － 沒有 public/data（先 make rebuild），略過資料測試');

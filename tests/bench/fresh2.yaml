@@ -1,0 +1,77 @@
+# 第四批「沒調過參的新題」（v16，2026-09-11 使用者第三次要求「用不同疾病名稱反覆測」）。
+# 跨科別：內科、外科、婦產、兒科、精神、感染、電解質、症狀碼。與其他題組的查詢字串不重複。
+# ⚠️ 由 Claude 草擬，gold 由 run.mjs 核對存在於 2023 版；臨床判斷請抽查。
+items:
+  - {q: 痛風, gold: ["M10*", "M1A*"]}
+  - {q: 高血脂症, gold: [E78.5, E78.2, "E78.4*"]}
+  - {q: 貧血, gold: [D64.9]}
+  - {q: 缺鐵性貧血, gold: ["D50*"]}
+  - {q: 甲狀腺機能亢進, gold: ["E05*"]}
+  - {q: 甲狀腺機能低下, gold: ["E03*"]}
+  - {q: 泌尿道感染, gold: [N39.0]}
+  - {q: 急性腸胃炎, gold: [A09, K52.9]}
+  - {q: 便秘, gold: ["K59.0*"]}
+  - {q: 胃潰瘍, gold: ["K25*"]}
+  - {q: 十二指腸潰瘍, gold: ["K26*"]}
+  - {q: 膽結石, gold: ["K80*"]}
+  - {q: 急性闌尾炎, gold: ["K35*"]}
+  - {q: 痔瘡, gold: ["K64*"]}
+  - {q: 心房顫動, gold: ["I48*"]}
+  - {q: 氣喘, gold: ["J45*"]}
+  - {q: 流行性感冒, gold: ["J11*", "J10*"]}
+  - {q: 失眠, gold: ["G47.0*", "F51.0*"]}
+  - {q: 偏頭痛, gold: ["G43*"]}
+  - {q: 憂鬱症, gold: ["F32*", "F33*"]}
+  - {q: 焦慮症, gold: ["F41*"]}
+  - {q: 注意力不足過動症, gold: ["F90*"]}
+  - {q: 自閉症, gold: ["F84.0"]}
+  - {q: 骨質疏鬆症, gold: ["M81*", "M80*"]}
+  - {q: 腰椎椎間盤突出, gold: ["M51.26", "M51.27", "M51.2*"]}
+  - {q: 攝護腺癌, gold: [C61]}
+  - {q: 大腸癌, gold: ["C18*", C19, C20]}
+  - {q: 胃癌, gold: ["C16*"]}
+  - {q: 肝癌, gold: ["C22*"]}
+  - {q: 子宮肌瘤, gold: ["D25*"]}
+  - {q: 子宮內膜異位症, gold: ["N80*"]}
+  - {q: 妊娠糖尿病, gold: ["O24.4*"]}
+  - {q: 早產, gold: ["O60*"]}
+  - {q: 手足口病, gold: [B08.4]}
+  - {q: 水痘, gold: ["B01*"]}
+  - {q: 麻疹, gold: ["B05*"]}
+  - {q: 登革熱, gold: [A90, "A91*"]}
+  - {q: 酒精性肝炎, gold: ["K70.1*"]}
+  - {q: 急性腎損傷, gold: ["N17*"]}
+  - {q: 低血鉀, gold: [E87.6]}
+  - {q: 低血鈉, gold: [E87.1]}
+  - {q: 脫水, gold: ["E86*"]}
+  - {q: 暈眩, gold: [R42]}
+  - {q: 胸痛, gold: ["R07*"]}
+  - {q: 頭痛, gold: ["R51*"]}
+  - {q: hyperlipidemia, gold: [E78.5]}
+  - {q: iron deficiency anemia, gold: ["D50*"]}
+  - {q: gallstone, gold: ["K80*"]}
+  - {q: acute appendicitis, gold: ["K35*"]}
+  - {q: hemorrhoids, gold: ["K64*"]}
+  - {q: asthma, gold: ["J45*"]}
+  - {q: influenza, gold: ["J11*", "J10*"]}
+  - {q: insomnia, gold: ["G47.0*", "F51.0*"]}
+  - {q: migraine, gold: ["G43*"]}
+  - {q: major depressive disorder, gold: ["F32*", "F33*"]}
+  - {q: ADHD, gold: ["F90*"]}
+  - {q: prostate cancer, gold: [C61]}
+  - {q: colon cancer, gold: ["C18*"]}
+  - {q: uterine fibroid, gold: ["D25*"]}
+  - {q: endometriosis, gold: ["N80*"]}
+  - {q: gestational diabetes, gold: ["O24.4*"]}
+  - {q: hand foot mouth disease, gold: [B08.4]}
+  - {q: chickenpox, gold: ["B01*"]}
+  - {q: acute kidney injury, gold: ["N17*"]}
+  - {q: hypokalemia, gold: [E87.6]}
+  - {q: dizziness, gold: [R42]}
+  - {q: chest pain, gold: ["R07*"]}
+  - {q: dehydration, gold: ["E86*"]}
+  - {q: 帶狀疱疹後神經痛右側, gold: ["B02.2*"]}
+  - {q: 慢性腎臟病第三期, gold: ["N18.3*"]}
+  - {q: CKD stage 4, gold: [N18.4]}
+  - {q: 第二型糖尿病伴有高血糖, gold: [E11.65]}
+  - {q: 高血壓性心臟病, gold: ["I11*"]}

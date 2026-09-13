@@ -15,6 +15,8 @@
  */
 import { CJK, bigrams, keyOf, norm, parts, phraseKey, stem, tokens, tokensOf } from './normalize.js';
 import { parseQuery } from './query.js';
+import { facetsOf } from './facets.js';
+import { sideOf, siteConflict, siteOk } from './side.js';
 
 export const CONFIG = {
   srcWeight: {
@@ -36,6 +38,24 @@ export const CONFIG = {
   manifestDemote: 0.9, // 「in diseases classified elsewhere」表現碼（v11）
   cdcDefBonus: 1.08,  // 整句命中時，CDC 字母索引直接給的碼（真正的預設碼）加分（v11）
   negationDemote: 0.6, // 查詢詞在標題裡是被否定的（「未伴有敗血性休克」、"without septic shock"）（v13）
+  // ── 側別＋部位（v16，只在查詢含左／右／雙側時作用；見 side.js、lateralize()）──
+  sideMatch: 1.3,     // 側別相符
+  sideOther: 0.5,     // 側別相反（問左側卻是右側／雙側）
+  sideUnspec: 0.8,    // 「未明示側」
+  sideOffTopic: 0.8,  // 側別相符但和該類目主題不是同一個病（結膜炎 → 眼瞼結膜炎 H10.501）
+  sideNone: 0.85,     // 名稱沒有側別
+  siteMiss: 0.75,     // 查詢有部位（腿、膝…）但這個碼的名稱對不上
+  siteConflict: 0.5,  // 名稱是另一個部位（問手臂卻是手指；「右手」字對讓 L03.011 手指搶過 L03.113 上肢）
+  laterDemote: 0.9,   // 後續照護／後遺症（查詢沒講就降）
+  openDemote: 0.9,    // 開放性骨折（查詢沒講就降，預設閉鎖性）
+  sideTopK: 5,        // 前幾名候選去找「側別＋部位相符」的同類目可申報碼
+  sideGeneric: 2,     // 同類目多個相符時，偏好 unspecified／primary（醫師沒講細分型）
+  sideHint: 3,        // 同類目挑碼：名稱符合細部提示（distal ↔ lower end）加分
+  sideGenericMul: 1.06, // 側別相符的候選裡，通用碼（unspecified part／primary）略加分：
+                        // 「右肺癌」C34.31 下葉只贏 C34.91 2%、「left femoral neck fracture」S72.042A 基部贏 4%
+  sideStrip: true,    // ATM 用去掉側別字的查詢（A/B 測試用開關）
+  sideMember: 0.99,   // 找到的碼 ＝ 原候選分數 × sideMatch × 此值
+  obstetricDemote: 0.85, // 查詢沒提懷孕，妊娠章（O 碼）略降（v16：「慢性腎臟病第三期」被「妊娠第三期」搶走）
   prefixMin: 3,
   limit: 60,
 };
@@ -165,6 +185,10 @@ export class Engine {
     this.avgLen = len.reduce((a, b) => a + b, 0) / Math.max(1, rows.length);
     this.vocabEn = [...this.post.keys()].filter((t) => !CJK.test(t)).sort();
     this.tokCache = new Map();
+    // 有分側的碼群（碼的前 5 字元）：沒寫側別的碼只有在這種群裡才因「沒有側別」被降（v16）。
+    // G51.0 Bell 氏麻痺本身不分側 → 查「左側顏面神經麻痺」不該輸給 G51.32 左側半顏面痙攣。
+    this.latPrefix5 = new Set();
+    for (const r of rows) if (facetsOf({ en: r[2], use: r[3] }).lat) this.latPrefix5.add(r[0].slice(0, 5));
     this.buildMs = Date.now() - t0;
   }
 
@@ -391,8 +415,16 @@ export class Engine {
     details.corrections = corrections;
     details.expansions = expansions;
 
+    // 側別（v16）：ATM 用去掉側別字的查詢（「cellulitis of left leg」→「cellulitis of leg」才對得到入口詞），
+    // BM25 仍用原句（側別字本身也是線索），最後由 lateralize() 依側別與部位調整。
+    const side = sideOf(text);
+    details.side = side ? { lat: side.lat, sites: side.sites.length } : null;
+
     // 2–3. ATM
-    const { whole, segs } = this.segments(text);
+    // ★ 原句本身就是入口詞（「Hernia, femoral, bilateral, with obstruction」→ K41.00）就用原句：
+    //   先去掉 bilateral 會變成單側 K41.30 的入口詞，拿到 ATM 高分，連相反側 ×0.5 都壓不下來。
+    const atmText = side && CONFIG.sideStrip && !this.lookup(text) ? side.strip : text;
+    const { whole, segs } = this.segments(atmText);
     details.whole = whole;
     const sw = (s) => (s < 0 ? CONFIG.srcWeight.title : CONFIG.srcWeight[this.srcNames[s]] ?? 0.5);
     const segSets = [];
@@ -450,6 +482,10 @@ export class Engine {
         segs.forEach((s, i) => {
           const set = segSets[i];
           if (set?.has(d)) { ok += 1; bonus += CONFIG.segBonus * set.get(d); return; }
+          // ★ 單一個中文字的段（「右眼結膜炎」去掉側別後的「眼」、「肩旋轉肌腱撕裂」的「肩」）沒有字對可比，
+          //   need 永遠是 0 → 沒有任何碼能通過 AND，連主題碼 H10.9 都進不來（v16 fresh4）。
+          //   部位由側別規則處理，這種段視為已滿足；英文拼錯的詞維持不算（breat cancer 的教訓）。
+          if (!s.mapped && [...s.text].length === 1 && CJK.test(s.text)) { ok += 1; return; }
           const { m, need } = segMask[i];
           // need = 0：這段的詞全庫都沒有（修正也修不回來）→ 不能拿來當「已滿足」
           if (need && popcount(a.mask & m) >= need) ok += 1;
@@ -475,19 +511,164 @@ export class Engine {
       // 迭代中要刪除，所以先複製一份鍵
       for (const d of Array.from(score.keys())) if (negTok.some((t) => this.docTokens(d).has(t))) score.delete(d);
     }
+    if (side) this.lateralize(score, side, bm, text, details.mapped);
     return this.finish(score, details, text, limit);
+  }
+
+  /**
+   * 側別＋部位（v16）。兩步：
+   *   1. 既有候選：側別相符加分、相反扣分、未明示側／沒有側別略降；部位對不上降；
+   *      後續照護、後遺症、開放性骨折在查詢沒提時略降（醫師最常要的是初次照護、閉鎖性）
+   *   2. 特化：前 sideTopK 名裡側別不符（或是標題碼）的候選 → 在它的類目（標題碼則是自己的子孫）
+   *      找「側別＋部位都相符、初次照護、可申報」的碼，排在「原候選若側別相符」的位置。
+   *      多個相符時看 BM25 分數，再偏好 unspecified／primary（醫師沒講細分型時的通用碼）。
+   *   例：左小腿蜂窩性組織炎 → ATM 到 L03.90 → 類目 L03 裡左側＋下肢 → L03.116。
+   */
+  lateralize(score, side, bm, text, mapped = []) {
+    const C = CONFIG;
+    // 查詢的英文詞出現在「官方英文名稱」裡的數量：查 calf 就要挑名稱有 calf 的 L97.228，不是通用的 L97.928。
+    // ★ 只算英文：中文 bigram 會被字序騙（「左側乳癌」的「側乳」剛好出現在「左側乳房中央位置」、
+    //   「鎖骨骨折」的「骨骨」出現在「鎖骨骨幹」），v16 第三輪因此把 C50.112、S42.022A 排到通用碼前面。
+    const qTok = new Set(tokens(text).filter((t) => !CJK.test(t)));
+    const nameCov = (x) => {
+      if (!qTok.size) return 0;
+      const nt = new Set(tokens(this.rows[x][2]));
+      let n = 0;
+      for (const t of qTok) if (nt.has(t)) n += 1;
+      return n;
+    };
+    const avoided = (d) => side.avoid.some((a) => a.en.test(this.rows[d][2]));
+    // 問左／右時，ICD 只分「單側」的碼（K40.90 單側腹股溝疝氣）也算側別相符
+    const latOk = (lat) => lat === side.lat || (lat === '單側' && side.lat !== '雙側');
+    // ★ 共同前綴的「錨」＝查詢對到的主題碼（同類目有多個時取它們的共同前綴），不是產生候選的那個碼：
+    //   BM25 撈到的 S72.04「股骨頸基部」、I82.4Y「近端下肢」不是查詢的主題，拿它當錨會挑到它的子碼；
+    //   「肺癌」同時對到 C34.1／C34.2／C34.3 三個肺葉 → 錨是 C34.，不偏好任何一葉。
+    const mappedCodes = mapped.flatMap((m) => m.concepts.map((c) => c.code));
+    // 同類目的主題若有上下層關係（「耳鳴」同時對到 H93 與 H93.1），只留最下層再取共同前綴：
+    // 錨取 H93 等於沒有錨，會被 unspecified 的 H93.91「右側耳疾患」搶走 H93.11。
+    const anchorOf = (cat) => {
+      const inCat = mappedCodes.filter((c) => c.startsWith(cat));
+      const leaves = inCat.filter((c) => !inCat.some((o) => o !== c && o.startsWith(c)));
+      return leaves.length ? leaves.reduce((a, c) => a.slice(0, commonPrefix(a, c))) : null;
+    };
+    // 主題的「內容詞」＝錨碼英文名稱去掉泛用字、部位字、側別字後剩下的詞
+    // （conjunctivitis、cellulitis、adhesive capsulitis、subluxation／dislocation、hydronephrosis）。
+    // 找到的碼至少要共用一個內容詞：從 H10.9「結膜炎」找右眼的碼，不能挑 H10.501 blepharoconjunctivitis；
+    // 從 N13.30「腎水腫」不能挑 N13.721 單側逆流性腎病變（v16 fresh4）。
+    // 只取「最罕見的一個詞」會壞：S43.0「Subluxation and dislocation」只留 subluxation，就把 S43.004A 脫臼擋掉。
+    // 錨是前綴（C34.）時不用。
+    const contentOf = (anchor) => {
+      const a = anchor && this.id.get(anchor);
+      if (a === undefined || a === null) return null;
+      const s = new Set(tokens(this.rows[a][2]).filter((t) => t.length >= 4 && !KEY_STOP.has(t) && !SITE_STOP.has(t)));
+      return s.size ? s : null;
+    };
+    // 候選 d 與它所在類目的主題是不是同一個病（類目裡沒有主題、或主題沒有內容詞 → 不判斷，當作是）
+    const catContent = new Map();
+    const sameDisease = (d) => {
+      const cat = this.codes[d].slice(0, 3);
+      if (!catContent.has(cat)) catContent.set(cat, contentOf(anchorOf(cat)));
+      const content = catContent.get(cat);
+      if (!content) return true;
+      const tk = new Set(tokens(this.rows[d][2]));
+      for (const t of content) if (tk.has(t)) return true;
+      return false;
+    };
+    const fac = (d) => facetsOf({ en: this.rows[d][2], use: this.rows[d][3] });
+    const site = (d) => siteOk(side, this.rows[d][1], this.rows[d][2]);
+    const orig = new Map();
+    for (const [d, v] of score) {
+      if (String(v.why.kind).startsWith('code')) continue;     // 使用者直接打的碼不動
+      orig.set(d, v.s);
+      const f = fac(d);
+      const ok = latOk(f.lat);
+      // 「單側」在候選層不加分（只在找側別碼時算相符）：v16 fresh4「左側腎水腫」被 N13.721
+      // 「單側性膀胱輸尿管逆流…」搶走 N13.30 —— 單側 ×1.3 讓不相干的碼升上來。
+      // 側別相符也要是「同一個病」才加分：H10.501 眼瞼結膜炎沒有主題 H10.9 的內容詞 conjunctivitis → 不加分
+      let m = f.lat === side.lat ? (sameDisease(d) ? C.sideMatch : C.sideOffTopic) : ok ? 1
+        : f.lat && f.lat !== '未明示側' ? C.sideOther : f.lat ? C.sideUnspec
+          : this.latPrefix5.has(this.codes[d].slice(0, 5)) ? C.sideNone : 1;
+      // 查詢有部位、名稱卻是「unspecified site」（M19.90 未明示部位骨關節炎）→ 跟「別的部位」一樣重降：
+      // 單字段（膝、髖）視為已滿足後，M19.90 會以主題分數搶過 M17.11／M16.11
+      if (!site(d)) {
+        m *= siteConflict(side, this.rows[d][1], this.rows[d][2]) || UNSPEC_SITE.test(this.rows[d][2]) ? C.siteConflict : C.siteMiss;
+      }
+      if (f.enc && f.enc !== '初次照護' && !side.later) m *= C.laterDemote;
+      if (f.fx === '開放性' && !side.open) m *= C.openDemote;
+      if (!side.fbody && FBODY.test(this.rows[d][2])) m *= C.openDemote;
+      if (avoided(d)) m *= C.openDemote;
+      if (ok && GENERIC_PART.test(this.rows[d][2])) m *= C.sideGenericMul;
+      v.s *= m;
+    }
+    const top = [...orig.keys()].sort((a, b) => score.get(b).s - score.get(a).s).slice(0, C.sideTopK);
+    const done = new Set();
+    for (const d of top) {
+      const f = fac(d);
+      const header = this.rows[d][3] === 0;
+      if (latOk(f.lat) && !header) continue;                    // 已經是側別相符的可申報碼
+      // 找碼範圍：側別相符的標題碼 → 自己的子孫；標題碼、「unspecified」通用碼、或本身有側別但相反
+      // （問雙側卻對到單側 K41.30，雙側版 K41.00 在另一個 5 字元群）→ 整個類目；
+      // 本身完全不分側的具體疾病 → 只看同一個 5 字元群（G51.0 Bell 氏麻痺不能跨到 G51.32 半顏面痙攣）
+      const code = this.codes[d];
+      const wrongSide = Boolean(f.lat) && f.lat !== '未明示側' && !latOk(f.lat);
+      const fam = header && latOk(f.lat) ? code
+        : header || wrongSide || /\bunspecified\b/i.test(this.rows[d][2]) ? code.slice(0, 3) : code.slice(0, 5);
+      if (done.has(fam)) continue;
+      done.add(fam);
+      const anchor = anchorOf(this.codes[d].slice(0, 3));
+      const content = contentOf(anchor);
+      const cands = [];
+      for (const x of this.descendants(fam)) {
+        if (this.rows[x][3] !== 1) continue;
+        const fx = fac(x);
+        if (!latOk(fx.lat) || !site(x)) continue;
+        if (fx.enc && fx.enc !== '初次照護' && !side.later) continue;
+        if (fx.fx === '開放性' && !side.open) continue;
+        if (!side.fbody && FBODY.test(this.rows[x][2])) continue;
+        const [zh, en] = [this.rows[x][1], this.rows[x][2]];
+        let share = 0;
+        if (content) {
+          const tk = new Set(tokens(en));
+          for (const t of content) if (tk.has(t)) share += 1;
+          if (!share) continue;                                  // 不同的病（眼瞼結膜炎、逆流性腎病變）
+        }
+        const hint = side.hints.some((h) => h.zh.test(zh) || h.en.test(en)) ? 1 : 0;
+        // 挑碼順序：非避開 → 與主題錨的共同前綴 → 細部提示 → 查詢英文詞在官方名稱裡的數量 → 通用碼 → BM25
+        // ★ 共同前綴：從 M75.0（五十肩）要挑 M75.02，不是同類目的 M75.92「未明示肩病灶」。
+        // ★ 通用碼排在 BM25 前：「左鎖骨骨折」BM25 偏好骨幹碼（舊譯名入口詞多），醫師沒講部位就該是 S42.002A。
+        cands.push([
+          x, avoided(x) ? 0 : 1, share,
+          anchor ? commonPrefix(this.codes[x], anchor) : 0, hint, nameCov(x),
+          GENERIC.test(en) ? 1 : 0, bm.acc.get(x)?.score ?? 0,
+        ]);
+      }
+      if (!cands.length) continue;
+      cands.sort((a, b) => {
+        for (let k = 1; k < a.length; k += 1) if (b[k] !== a[k]) return b[k] - a[k];
+        return this.codes[a[0]].localeCompare(this.codes[b[0]]);
+      });
+      const base = orig.get(d) * C.sideMatch * C.sideMember * (avoided(d) ? C.openDemote : 1);
+      const atm = Boolean(score.get(d).atm);
+      cands.slice(0, 3).forEach(([x], i) => {
+        const s = base * (1 - 0.02 * i);
+        const cur = score.get(x);
+        if (!cur || s > cur.s) score.set(x, { s, why: { kind: 'text' }, atm, ...(cur?.def ? { def: true } : {}) });
+      });
+    }
   }
 
   finish(score, details, text, limit) {
     // 標題碼 ×0.97（同分時可申報碼優先）；「歸類於他處疾病」的表現碼 ×0.9 —— 依撰碼規則
     // 它們不能當主診斷（要先編原發疾病），v10 查 pyelonephritis 曾讓 N16 排第一。
     const neg = negationProbe(text);
+    const preg = PREG.test(text ?? '');
     const adj = (d, v) => {
       if (v.why.kind === 'code') return v.s;
       let s = v.s;
       if (this.rows[d][3] === 0) s *= CONFIG.headerDemote;
       if (/classified elsewhere/i.test(this.rows[d][2])) s *= CONFIG.manifestDemote;
       if (neg && negated(this.rows[d], neg)) s *= CONFIG.negationDemote;
+      if (!preg && this.codes[d][0] === 'O') s *= CONFIG.obstetricDemote;
       return s;
     };
     const items = [...score.entries()]
@@ -523,6 +704,8 @@ export class Engine {
  * 標題含查詢字串，意思卻相反。只在「查詢整段」緊跟在否定詞之後時才算，避免誤傷。
  */
 const ZH_NEG = ['未伴有', '未併有', '未合併', '無', '未', '非'];
+// 查詢有提到懷孕／產科才不降 O 碼（v16）
+const PREG = /妊娠|懷孕|孕|產|胎|分娩|哺乳|pregnan|obstet|puerper|trimester|labou?r|deliver|gestation|partum|fetal|fetus|abortion|ectopic|placenta|eclampsia|lactation/i;
 function negationProbe(text) {
   const t = norm(text);
   const zh = t.replace(/\s+/g, '');
@@ -546,6 +729,25 @@ function negated(row, probe) {
   }
   return false;
 }
+
+const FBODY = /\bwith foreign body\b/i;
+// 通用碼：醫師沒講細分型時的碼（unspecified part／primary）。「unspecified side／knee」這種未明示側
+// 由 facets 判成「未明示側」，不會同時是側別相符，所以不會被這條誤加分。
+// without：醫師沒提阻塞、壞疽、異物、併發症時就是 without（K40.90、S61.411A、E11.9）
+const GENERIC = /\bunspecified\b|\bprimary\b|\bwithout\b/i;
+// 候選層加分只給「部位未明示」：「unspecified stability／ligament」是另一個軸，
+// v16 第二輪用寬版讓 S93.401 標題碼（unspecified ligament）搶過 S93.401A、M93.071 搶過 M93.021
+const GENERIC_PART = /\bunspecified (part|site)s?\b/i;
+const UNSPEC_SITE = /\bunspecified site\b/i;
+const commonPrefix = (a, b) => { let i = 0; while (i < a.length && a[i] === b[i]) i += 1; return i; };
+// 辨識詞不能是這些泛用字（比對用 stem 後的形式）
+const KEY_STOP = new Set(['unspecified', 'other', 'specified', 'without', 'with', 'classified', 'elsewhere', 'encounter',
+  'initial', 'subsequent', 'sequela', 'disease', 'disorder', 'condition', 'part', 'site', 'unilateral', 'bilateral']
+  .flatMap((w) => [w, stem(w)]));
+// 部位與側別字不算「內容詞」（找的就是換了側別／部位的碼）
+const SITE_STOP = new Set(['right', 'left', 'side', 'shoulder', 'knee', 'hip', 'elbow', 'wrist', 'ankle', 'hand', 'foot',
+  'eye', 'ear', 'breast', 'lung', 'limb', 'upper', 'lower', 'extremity', 'extremities', 'leg', 'arm', 'joint', 'region',
+  'finger', 'thumb', 'toe', 'axilla'].flatMap((w) => [w, stem(w)]));
 
 function dedupe(concepts) {
   const seen = new Set();

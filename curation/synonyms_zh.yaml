@@ -56,3 +56,43 @@ items:
   - {term: 骨盆腔發炎, codes: [N73.9], note: 官方名「女性骨盆炎性疾病」；披衣菌性另編 A56.11, approved: true, added_by: claude-v13}
   - {term: 骨盆腔炎, codes: [N73.9], note: 同上, approved: true, added_by: claude-v13}
   - {term: 手汗症, codes: [L74.512], note: 官方名「手掌原發性局部多汗症」, approved: true, added_by: claude-v13}
+  # ── v16：精確碼與第四批新題實測補（2026-09-11），請抽查 ──
+  # 側別不寫在俗稱裡：對到「未明示側」的碼，查詢有左／右／雙側時由引擎（lateralize）帶到該側的碼
+  - {term: 膝痛, codes: [M25.569], note: 官方名「膝部關節痛」；左 M25.562、右 M25.561, approved: true, added_by: claude-v16}
+  - {term: 膝蓋痛, codes: [M25.569], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 膝疼痛, codes: [M25.569], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 膝關節痛, codes: [M25.569], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 肩膀痛, codes: [M25.519], note: 官方名「肩部關節痛」；左 M25.512、右 M25.511, approved: true, added_by: claude-v16}
+  - {term: 肩痛, codes: [M25.519], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 肩膀疼痛, codes: [M25.519], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 泌尿道感染, codes: [N39.0], note: 官方名「未明示部位之泌尿道感染症」；確定是膀胱炎改編 N30.-, approved: true, added_by: claude-v16}
+  - {term: 急性腸胃炎, codes: [A09], note: 台灣門診慣用 A09（感染性胃腸炎）；確定非感染性改 K52.9, approved: true, added_by: claude-v16}
+  - {term: 腸胃炎, codes: [A09, K52.9], note: 感染性 A09／非感染性 K52.9, approved: true, added_by: claude-v16}
+  - {term: 深部靜脈栓塞, codes: [I82.409], note: 下肢急性（未明示側）；左 I82.402、右 I82.401、慢性 I82.5-, approved: true, added_by: claude-v16}
+  - {term: 深部靜脈血栓, codes: [I82.409], note: 同上, approved: true, added_by: claude-v16}
+  # v16 第五批新題（左髖疼痛、更年期症候群首測查不到）：比照膝痛、肩痛補其他關節
+  - {term: 髖痛, codes: [M25.559], note: 官方名「髖部關節痛」；左 M25.552、右 M25.551, approved: true, added_by: claude-v16}
+  - {term: 髖疼痛, codes: [M25.559], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 髖關節痛, codes: [M25.559], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 肘痛, codes: [M25.529], note: 官方名「肘部關節痛」；左 M25.522、右 M25.521, approved: true, added_by: claude-v16}
+  - {term: 手肘痛, codes: [M25.529], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 肘疼痛, codes: [M25.529], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 腕痛, codes: [M25.539], note: 官方名「腕部關節痛」；左 M25.532、右 M25.531, approved: true, added_by: claude-v16}
+  - {term: 手腕痛, codes: [M25.539], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 腕疼痛, codes: [M25.539], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 踝痛, codes: [M25.579], note: 官方名「踝部及足部關節痛」；左 M25.572、右 M25.571, approved: true, added_by: claude-v16}
+  - {term: 腳踝痛, codes: [M25.579], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 踝疼痛, codes: [M25.579], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 更年期症候群, codes: [N95.1], note: 官方名「停經及女性更年期之病況」, approved: true, added_by: claude-v16}
+  - {term: 更年期, codes: [N95.1], note: 同上（原本只有 Wikidata 別名指到標題碼 N95）, approved: true, added_by: claude-v16}
+  # v16 fresh4（首測只測一次）失分補：官方譯名「旋轉環帶」與臨床說法不同；中風依 CDC 索引 Stroke NOS → I63.9
+  - {term: 旋轉肌腱撕裂, codes: [M75.100], note: 非外傷性旋轉環帶撕裂（未明示側）；外傷性拉傷另編 S46.01-, approved: true, added_by: claude-v16}
+  - {term: 旋轉肌撕裂, codes: [M75.100], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 旋轉肌袖撕裂, codes: [M75.100], note: 同上, approved: true, added_by: claude-v16}
+  - {term: 中風, codes: [I63.9], note: CDC 索引 Stroke NOS → 腦梗塞 I63.9；出血性中風另編 I61.-／I62.-, approved: true, added_by: claude-v16}
+  - {term: 腦中風, codes: [I63.9], note: 同上, approved: true, added_by: claude-v16}
+  # v16 fresh5（首測只測一次）失分補：口語症狀說法，官方名稱用詞不同
+  - {term: 乾咳, codes: [R05.9], note: 官方名「咳嗽」；急性 R05.1、慢性 R05.3, approved: true, added_by: claude-v16}
+  - {term: 胃痛, codes: [R10.13], note: 官方名「心窩部痛」（Epigastric pain）；功能性消化不良 K30、未明示腹痛 R10.9, approved: true, added_by: claude-v16}
+  - {term: 上腹痛, codes: [R10.13], note: 同上；未明示上腹部痛 R10.10, approved: true, added_by: claude-v16}
+  - {term: 心窩痛, codes: [R10.13], note: 同上, approved: true, added_by: claude-v16}

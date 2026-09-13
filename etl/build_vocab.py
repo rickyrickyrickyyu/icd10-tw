@@ -552,12 +552,31 @@ def curated(vcm: Vocab, rep: dict) -> None:
             continue
         items = yaml.safe_load(p.read_text(encoding="utf-8")).get("items") or []
         ok = [x for x in items if x.get("approved") is True]
+        # ★ 醫師核可的對應以核可為準（v16）：同一段文字在其他來源指向別的碼 → 移除；
+        #   同文字同碼已存在 → 來源改記為策展（權重較高）。
+        #   v15 以前 add() 只保留「序號較小」的來源：「泌尿道感染」的核可條目 N39.0 被 ICD-9 舊名（0.55）蓋掉，
+        #   Wikidata 把同一段文字指到 N30.0 急性膀胱炎（0.7）反而排第一。
+        by_key: dict = {}
+        for (k, c) in vcm.rows:
+            by_key.setdefault(k, []).append(c)
+        cur_src = {S["cur-zh"], S["cur-abbr"]}
+        overridden = 0
         for x in ok:
+            k = key(x["term"])
+            keep = {vcm.resolve(c)[0] for c in x["codes"]}
+            for c in by_key.get(k, []):
+                row = vcm.rows.get((k, c))
+                if row and c not in keep and row[2] not in cur_src:
+                    del vcm.rows[(k, c)]
+                    overridden += 1
             for code in x["codes"]:
                 vcm.add(x["term"], code, src)
+                c = vcm.resolve(code)[0]
+                if (k, c) in vcm.rows:
+                    vcm.rows[(k, c)][2] = S[src]
             if x.get("expand"):
                 ABBR[key(x["term"])] = x["expand"]
-        rep[fname] = {"items": len(items), "approved": len(ok)}
+        rep[fname] = {"items": len(items), "approved": len(ok), "overrode_other_sources": overridden}
     rep["abbr_expand"] = len(ABBR)
 
 

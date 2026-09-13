@@ -7,6 +7,8 @@ const LAT = [
   [/\bright\b/i, '右側'],
   [/\bleft\b/i, '左側'],
   [/\bunspecified (side|eye|ear|arm|leg|hand|foot|knee|hip|shoulder|elbow|wrist|ankle|thigh|lower leg|upper arm|forearm|finger|toe|kidney|ovary|breast|lung|limb|upper limb|lower limb)\b/i, '未明示側'],
+  // 「單側」放最後：M17.11「Unilateral …, right knee」先被 right 判成右側；只有 K40.90 這種不分左右的才是單側
+  [/\bunilateral\b/i, '單側'],
 ];
 const ENC = [
   [/\binitial encounter\b/i, '初次照護'],

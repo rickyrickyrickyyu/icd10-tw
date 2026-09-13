@@ -1,0 +1,60 @@
+# 精確碼題組（v16 新增）：醫師會打側別與部位，正解是「可申報的最末碼」，不是標題碼、也不是「未明示部位」。
+# v15 批次查碼實測：「cellulitis of left leg」第一名是標題碼 L03.11、「左小腿蜂窩性組織炎」是 L03.90。
+# gold 全部核對過存在於 2023 版且可申報（run.mjs 會再驗一次）。
+# ⚠️ 由 Claude 草擬；臨床判斷請抽查。
+items:
+  # ── 英文 ──
+  - {q: cellulitis of left leg, gold: [L03.116], tag: side-site}
+  - {q: cellulitis of right leg, gold: [L03.115], tag: side-site}
+  - {q: cellulitis of right arm, gold: [L03.113], tag: side-site}
+  - {q: left axillary abscess, gold: [L02.412], tag: side-site}
+  - {q: right knee osteoarthritis, gold: [M17.11], tag: side}
+  - {q: osteoarthritis of left knee, gold: [M17.12], tag: side}
+  - {q: bilateral knee osteoarthritis, gold: [M17.0], tag: side}
+  - {q: right hip osteoarthritis, gold: [M16.11], tag: side}
+  - {q: left otitis media, gold: [H66.92], tag: side}
+  - {q: right distal radius fracture, gold: [S52.501A], tag: side}
+  - {q: left ankle sprain, gold: [S93.402A], tag: side}
+  - {q: right carpal tunnel syndrome, gold: [G56.01], tag: side}
+  - {q: bilateral carpal tunnel syndrome, gold: [G56.03], tag: side}
+  - {q: left frozen shoulder, gold: [M75.02], tag: side}
+  - {q: right breast cancer, gold: [C50.911], tag: side}
+  - {q: left lung cancer, gold: [C34.92], tag: side}
+  - {q: DVT of right leg, gold: [I82.401], tag: side-site}
+  - {q: left sciatica, gold: [M54.32], tag: side}
+  - {q: right tennis elbow, gold: [M77.11], tag: side}
+  - {q: left knee pain, gold: [M25.562], tag: side}
+  - {q: right shoulder pain, gold: [M25.511], tag: side}
+  - {q: left femoral neck fracture, gold: [S72.002A], tag: side}
+  - {q: right hand laceration, gold: [S61.411A], tag: side}
+  - {q: left eye acute conjunctivitis, gold: [H10.32], tag: side}
+  - {q: right foot pain, gold: [M79.671], tag: side}
+  - {q: left leg pain, gold: [M79.605], tag: side}
+  - {q: right trigger thumb, gold: [M65.311], tag: side}
+  - {q: left achilles tendinitis, gold: [M76.62], tag: side}
+  - {q: right ACL sprain, gold: [S83.511A], tag: side}
+  - {q: right BPPV, gold: [H81.11], tag: side}
+  - {q: left sudden hearing loss, gold: [H91.22], tag: side}
+  - {q: right clavicle fracture, gold: [S42.001A], tag: side}
+  - {q: left wrist ganglion, gold: [M67.432], tag: side}
+  # ── 中文 ──
+  - {q: 左下肢蜂窩組織炎, gold: [L03.116], tag: side-site}
+  - {q: 右小腿蜂窩性組織炎, gold: [L03.115], tag: side-site}
+  - {q: 左小腿蜂窩性組織炎, gold: [L03.116], tag: side-site}
+  - {q: 右手臂蜂窩組織炎, gold: [L03.113], tag: side-site}
+  - {q: 右膝退化性關節炎, gold: [M17.11], tag: side}
+  - {q: 左膝骨關節炎, gold: [M17.12], tag: side}
+  - {q: 雙膝退化性關節炎, gold: [M17.0], tag: side}
+  - {q: 右側中耳炎, gold: [H66.91], tag: side}
+  - {q: 左手腕隧道症候群, gold: [G56.02], tag: side}
+  - {q: 右肩五十肩, gold: [M75.01], tag: side}
+  - {q: 左側乳癌, gold: [C50.912], tag: side}
+  - {q: 右肺癌, gold: [C34.91], tag: side}
+  - {q: 左腳深部靜脈栓塞, gold: [I82.402], tag: side-site}
+  - {q: 右側坐骨神經痛, gold: [M54.31], tag: side}
+  - {q: 左膝疼痛, gold: [M25.562], tag: side}
+  - {q: 右踝扭傷, gold: [S93.401A], tag: side}
+  - {q: 左鎖骨骨折, gold: [S42.002A], tag: side}
+  - {q: 右耳突發性耳聾, gold: [H91.21], tag: side}
+  - {q: 左側網球肘, gold: [M77.12], tag: side}
+  - {q: 右側腋下膿瘍, gold: [L02.411], tag: side-site}

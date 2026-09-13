@@ -1,0 +1,38 @@
+# 第七批「沒調過參的新題」（v16 最終定版後才接進 run.mjs、只測一次；fresh4 首測後有依失分修正）。
+# ⚠️ 由 Claude 草擬，gold 已逐一核對存在於 2023 版且可申報；臨床判斷請抽查。
+items:
+  # ── 側別＋部位（詞序、說法都換過）──
+  - {q: right thigh cellulitis, gold: [L03.115], tag: side-site}
+  - {q: 左手腕腱鞘囊腫, gold: [M67.432], tag: side}
+  - {q: right knee pain, gold: [M25.561], tag: side}
+  - {q: 右手指蜂窩組織炎, gold: [L03.011], tag: side-site}
+  - {q: left ear otitis media, gold: [H66.92], tag: side}
+  - {q: 右側網球肘, gold: [M77.11], tag: side}
+  - {q: frozen shoulder left, gold: [M75.02], tag: side}
+  - {q: 左踝扭傷, gold: [S93.402A], tag: side}
+  - {q: 左側乳房纖維腺瘤, gold: [D24.2], tag: side}
+  # ── 寫了側別、但 ICD 不分側 ──
+  - {q: 右腳大拇趾甲溝炎, gold: ["L03.0*", L60.0], tag: side-none}
+  - {q: right lung nodule, gold: [R91.1, R91.8], tag: side-none}
+  - {q: 右側腎結石, gold: [N20.0], tag: side-none}
+  # ── 症狀與常見病 ──
+  - {q: 口角炎, gold: [K13.0]}
+  - {q: 口腔潰瘍, gold: ["K12*"]}
+  - {q: 扁桃腺炎, gold: ["J03*", "J35.0*"]}
+  - {q: tonsillitis, gold: ["J03*", "J35.0*"]}
+  - {q: 喉嚨痛, gold: [R07.0, "J02*"]}
+  - {q: sore throat, gold: [R07.0, "J02*"]}
+  - {q: 腸胃道出血, gold: [K92.2]}
+  - {q: 心悸, gold: [R00.2]}
+  - {q: palpitations, gold: [R00.2]}
+  - {q: 呼吸困難, gold: ["R06.0*"]}
+  - {q: shortness of breath, gold: ["R06.0*"]}
+  - {q: 疲倦, gold: ["R53*"]}
+  - {q: fatigue, gold: ["R53*"]}
+  - {q: 體重減輕, gold: [R63.4]}
+  - {q: weight loss, gold: [R63.4]}
+  - {q: 發燒, gold: ["R50*"]}
+  - {q: 乾咳, gold: ["R05*"]}
+  - {q: 胃痛, gold: ["R10.1*", R10.9, K30]}
+  - {q: 上腹痛, gold: ["R10.1*"]}
+  - {q: 消化不良, gold: [K30]}

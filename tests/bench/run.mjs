@@ -108,6 +108,11 @@ function main() {
     general: loadItems('general.yaml'),
     diverse: loadItems('diverse.yaml'),        // 跨科別、未拿來調參的新題（v11 起）
     fresh: loadItems('fresh.yaml'),            // 第三批新題（v13 起），含否定句
+    fresh2: loadItems('fresh2.yaml'),          // 第四批新題（v16 起），跨科別
+    precise: loadItems('precise.yaml'),        // 精確碼（v16 起）：側別＋部位 → 可申報最末碼
+    fresh3: loadItems('fresh3.yaml'),          // 第五批新題（v16）：側別、不分側反例、跨科別；首測後有依失分修正
+    fresh4: loadItems('fresh4.yaml'),          // 第六批新題（v16）：首測後有依失分修正
+    fresh5: loadItems('fresh5.yaml'),          // 第七批新題：v16 最終定版後才接進來、只測一次
     index_heldout: sample(held.filter((x) => x.src === 'cdc-idx' || x.src === 'cdc-see'), 1500, 'i')
       .map((x) => ({ q: x.q, gold: goldOf(x) })),
     zh_heldout: sample(held.filter((x) => x.src === 'zh14' || x.src === 'zh9'), 1000, 'z')

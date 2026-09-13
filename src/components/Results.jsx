@@ -113,7 +113,7 @@ function SearchDetails({ d, res, explode, setExplode, scope }) {
   }
   for (const f of d.free) parts.push(<span key={`f-${f}`}>「{f}」[全文]</span>);
   return (
-    <details className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" open={d.mapped.length > 0 || d.corrections.length > 0 || d.expansions?.length > 0}>
+    <details className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" open={d.mapped.length > 0 || d.corrections.length > 0 || d.expansions?.length > 0 || Boolean(d.side)}>
       <summary className="cursor-pointer select-none text-slate-600">
         {res.total.toLocaleString()} 筆｜{res.ms} ms｜{scope === 'pcs' ? 'PCS' : '全部 CM'}
         <span className="ml-2 text-slate-400">Search details</span>
@@ -124,6 +124,11 @@ function SearchDetails({ d, res, explode, setExplode, scope }) {
         )}
         {d.expansions?.length > 0 && (
           <p className="text-sky-800">縮寫展開：{d.expansions.map(([a, b]) => `${a.toUpperCase()} → ${b}`).join('、')}</p>
+        )}
+        {d.side && (
+          <p className="text-violet-800" data-testid="side-detail">
+            側別：{d.side.lat}{d.side.sites ? '＋部位' : ''} → 優先顯示該側、部位相符的可申報最末碼（初次照護、閉鎖性為預設）
+          </p>
         )}
         {parts.length > 0 && <p className="flex flex-wrap gap-x-2 gap-y-1">{parts.reduce((acc, p, i) => (i ? [...acc, <span key={`and-${i}`} className="text-slate-400">AND</span>, p] : [p]), [])}</p>}
         {d.whole && <p className="text-xs text-slate-500">整句命中入口詞：主題與其下層碼排在最前。</p>}

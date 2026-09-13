@@ -1,0 +1,63 @@
+# 第五批「沒調過參的新題」（v16 定版後才寫、只測一次，用來確認沒有過擬合 precise／fresh2）。
+# 含三類：側別＋部位（precise 沒出現過的部位與疾病）、
+#         「寫了側別但 ICD 不分側」的反例（右側腹股溝疝氣 → K40.90，不能被側別規則帶偏）、
+#         跨科別一般疾病（中英文）。
+# ⚠️ 由 Claude 草擬，gold 已逐一核對存在於 2023 版；臨床判斷請抽查。
+items:
+  # ── 側別＋部位 ──
+  - {q: right knee effusion, gold: [M25.461], tag: side}
+  - {q: 左髖疼痛, gold: [M25.552], tag: side}
+  - {q: right elbow pain, gold: [M25.521], tag: side}
+  - {q: left wrist sprain, gold: [S63.502A], tag: side}
+  - {q: 右肩脫臼, gold: [S43.004A], tag: side}
+  - {q: left rotator cuff tear, gold: [M75.102], tag: side}
+  - {q: 左耳外耳炎, gold: [H60.92], tag: side}
+  - {q: right ear cerumen impaction, gold: [H61.21], tag: side}
+  - {q: 左側卵巢囊腫, gold: [N83.202], tag: side}
+  - {q: 右側乳房腫塊, gold: [N63.10], tag: side}
+  - {q: 左側大腿蜂窩性組織炎, gold: [L03.116], tag: side-site}
+  - {q: right foot cellulitis, gold: [L03.115], tag: side-site}
+  - {q: 右耳耳鳴, gold: [H93.11], tag: side}
+  - {q: bilateral tinnitus, gold: [H93.13], tag: side}
+  # ── 寫了側別、但 ICD 不分側（不能被側別規則帶偏）──
+  - {q: 右側腹股溝疝氣, gold: [K40.90], tag: side-none}
+  - {q: 左側腎結石, gold: [N20.0], tag: side-none}
+  - {q: 右側足底筋膜炎, gold: [M72.2], tag: side-none}
+  - {q: 左側顏面神經麻痺, gold: [G51.0], tag: side-none}
+  - {q: 左側睪丸炎, gold: [N45.2, N45.3], tag: side-none}
+  - {q: 右側氣胸, gold: ["J93*"], tag: side-none}
+  # ── 跨科別一般疾病 ──
+  - {q: 甲狀腺癌, gold: [C73]}
+  - {q: thyroid cancer, gold: [C73]}
+  - {q: 胰臟癌, gold: ["C25*"]}
+  - {q: 食道癌, gold: ["C15*"]}
+  - {q: esophageal cancer, gold: ["C15*"]}
+  - {q: 鼻竇炎, gold: ["J32*", "J01*"]}
+  - {q: 蛀牙, gold: ["K02*"]}
+  - {q: 牙周病, gold: ["K05*"]}
+  - {q: 老花眼, gold: [H52.4]}
+  - {q: 耳鳴, gold: ["H93.1*"]}
+  - {q: tinnitus, gold: ["H93.1*"]}
+  - {q: 高尿酸血症, gold: [E79.0]}
+  - {q: 肥胖, gold: ["E66*"]}
+  - {q: obesity, gold: ["E66*"]}
+  - {q: 黃疸, gold: [R17]}
+  - {q: 血尿, gold: ["R31*"]}
+  - {q: hematuria, gold: ["R31*"]}
+  - {q: 尿失禁, gold: [R32, "N39.4*"]}
+  - {q: urinary incontinence, gold: [R32, "N39.4*"]}
+  - {q: 經前症候群, gold: [N94.3]}
+  - {q: 更年期症候群, gold: [N95.1]}
+  - {q: 不孕症, gold: ["N97*", "N46*"]}
+  - {q: infertility, gold: ["N97*", "N46*"]}
+  - {q: 產後出血, gold: ["O72*"]}
+  - {q: postpartum hemorrhage, gold: ["O72*"]}
+  - {q: 子癲前症, gold: ["O14*"]}
+  - {q: preeclampsia, gold: ["O14*"]}
+  - {q: 嬰兒腹絞痛, gold: [R10.83]}
+  - {q: 熱性痙攣, gold: ["R56.0*"]}
+  - {q: 失智症, gold: ["F03*", "F01*", "F02*", "G30*"]}
+  - {q: 酒精依賴, gold: ["F10.2*"]}
+  - {q: alcohol dependence, gold: ["F10.2*"]}
+  - {q: 尼古丁依賴, gold: ["F17.2*"]}
+  - {q: nicotine dependence, gold: ["F17.2*"]}

@@ -49,3 +49,6 @@ items:
   - {term: BPH, codes: [N40.0], note: benign prostatic hyperplasia, expand: "benign prostatic hyperplasia", approved: true}
   - {term: IBS, codes: [K58.9], note: irritable bowel syndrome, expand: "irritable bowel syndrome", approved: true}
   - {term: HCC, codes: [C22.0], note: hepatocellular carcinoma, expand: "hepatocellular carcinoma", approved: true}
+  # v16：精確碼題組實測補（「right ACL sprain」「right BPPV」原本前 20 名都沒有正解），請抽查
+  - {term: ACL, codes: [S83.519A], note: anterior cruciate ligament sprain（未明示側、初次照護）, expand: "anterior cruciate ligament", approved: true, added_by: claude-v16}
+  - {term: BPPV, codes: [H81.10], note: benign paroxysmal (positional) vertigo；官方名無 positional, expand: "benign paroxysmal vertigo", approved: true, added_by: claude-v16}

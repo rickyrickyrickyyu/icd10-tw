@@ -1,0 +1,47 @@
+# 第六批「沒調過參的新題」（v16 定版後才接進 run.mjs、只測一次，不再依結果調參）。
+# fresh3 首測後有依失分修正，所以 fresh3 已不算「沒看過」；這一批才是最後的泛化檢查。
+# ⚠️ 由 Claude 草擬，gold 已逐一核對存在於 2023 版；臨床判斷請抽查。
+items:
+  # ── 側別＋部位 ──
+  - {q: left knee effusion, gold: [M25.462], tag: side}
+  - {q: 右髖骨關節炎, gold: [M16.11], tag: side}
+  - {q: 左肩旋轉肌腱撕裂, gold: [M75.102], tag: side}
+  - {q: left otitis externa, gold: [H60.92], tag: side}
+  - {q: 右眼結膜炎, gold: [H10.31, H10.9], tag: side}
+  - {q: 左乳房良性腫瘤, gold: [D24.2], tag: side}
+  - {q: left carpal tunnel, gold: [G56.02], tag: side}
+  - {q: 左側肩膀痛, gold: [M25.512], tag: side}
+  - {q: right hip fracture, gold: [S72.001A], tag: side}
+  - {q: left thumb laceration, gold: [S61.012A], tag: side}
+  # ── 寫了側別、但 ICD 不分側 ──
+  - {q: right testicular torsion, gold: ["N44.0*"], tag: side-none}
+  - {q: 左側腎水腫, gold: ["N13.3*"], tag: side-none}
+  # ── 跨科別一般疾病 ──
+  - {q: 慢性胃炎, gold: ["K29.5*"]}
+  - {q: chronic gastritis, gold: ["K29.5*"]}
+  - {q: 大腸激躁症, gold: ["K58*"]}
+  - {q: 腸阻塞, gold: ["K56*"]}
+  - {q: 攝護腺炎, gold: ["N41*"]}
+  - {q: 膀胱過動症, gold: [N32.81]}
+  - {q: overactive bladder, gold: [N32.81]}
+  - {q: 陰道炎, gold: ["N76*"]}
+  - {q: vaginitis, gold: ["N76*"]}
+  - {q: 月經不規則, gold: [N92.6]}
+  - {q: 子宮頸癌, gold: ["C53*"]}
+  - {q: 卵巢癌, gold: ["C56*"]}
+  - {q: 白血病, gold: ["C91*", "C92*", "C93*", "C94*", "C95*"]}
+  - {q: leukemia, gold: ["C91*", "C92*", "C93*", "C94*", "C95*"]}
+  - {q: 淋巴瘤, gold: ["C81*", "C82*", "C83*", "C84*", "C85*", "C86*", "C88*"]}
+  - {q: 紅斑性狼瘡, gold: ["M32*", "L93*"]}
+  - {q: 乾眼症, gold: ["H04.12*"]}
+  - {q: dry eye, gold: ["H04.12*"]}
+  - {q: 青光眼, gold: ["H40*"]}
+  - {q: 白內障, gold: ["H26*", "H25*"]}
+  - {q: 中風, gold: ["I63*"]}
+  - {q: 巴金森氏症, gold: [G20]}
+  - {q: 流鼻血, gold: [R04.0]}
+  - {q: epistaxis, gold: [R04.0]}
+  - {q: 咳血, gold: [R04.2]}
+  - {q: 腹瀉, gold: [R19.7, K59.1, A09]}
+  - {q: 噁心嘔吐, gold: ["R11*"]}
+  - {q: nausea and vomiting, gold: ["R11*"]}
