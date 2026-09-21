@@ -1,5 +1,5 @@
 {
- "run_at": "2026-09-13",
+ "run_at": "2026-09-21",
  "rows": {
   "cm": 96802,
   "pcs": 78530,
@@ -16,8 +16,8 @@
   "map9_cm": "8ff64465b5ca196a593b5f35e684e979f92159abc81cdde42689d639767f30a9",
   "map9_pcs": "cfbf7c8e5ba13c971ab3cd1b84814f6d15d11edec8be16e496b9d0098b74f8b7"
  },
- "vocab_cm": 262359,
- "data_fingerprint": "cea003823cb3f2b5",
+ "vocab_cm": 262365,
+ "data_fingerprint": "ba137601e8f45255",
  "sources": {
   "nhi": {
    "cm": {
@@ -120,14 +120,14 @@
    "id": 10,
    "name": "入口詞目標碼有效（無 ICD-9 混入）",
    "passed": true,
-   "message": "CM 262,359／PCS 71,805 條",
+   "message": "CM 262,365／PCS 71,805 條",
    "overridden": false
   },
   {
    "id": 11,
    "name": "詞彙量健檢",
    "passed": true,
-   "message": "262,359（上期 262356）｜各來源 {'cdc-idx': 114631, 'cur-abbr': 40, 'cdc-see': 11212, 'cdc-incl': 10530, 'cdc-neo': 9012, 'doid': 10179, 'doid-rel': 195, 'mesh': 20596, 'zh14': 65339, 'zh9': 10217, 'en9': 9159, 'cur-zh': 88, 'naer': 1101, 'wd': 8897, 'wd-alias': 50160, 'fix-zh': 7, 'cms-idx': 12801}",
+   "message": "262,365（上期 262359）｜各來源 {'cdc-idx': 114631, 'cur-abbr': 40, 'cdc-see': 11212, 'cdc-incl': 10530, 'cdc-neo': 9012, 'doid': 10179, 'doid-rel': 195, 'mesh': 20596, 'zh14': 65339, 'zh9': 10217, 'en9': 9159, 'cur-zh': 88, 'naer': 1101, 'wd': 8898, 'wd-alias': 50165, 'fix-zh': 7, 'cms-idx': 12801}",
    "overridden": false
   },
   {
@@ -162,7 +162,7 @@
    "id": 15,
    "name": "資料指紋",
    "passed": true,
-   "message": "cea003823cb3f2b5 vs meta cea003823cb3f2b5",
+   "message": "ba137601e8f45255 vs meta ba137601e8f45255",
    "overridden": false
   }
  ]
