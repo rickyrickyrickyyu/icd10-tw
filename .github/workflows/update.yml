@@ -56,14 +56,20 @@ jobs:
 
       - name: 月份 key
         id: month
-        run: echo "ym=$(date +%Y-%m)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "ym=$(date +%Y-%m)" >> "$GITHUB_OUTPUT"
+          echo "early=$([[ $(date +%-d) -le 7 ]] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
 
+      # ★ GitHub 會逐出 7 天沒被存取的快取，每週排程剛好卡在邊界（2026-10 的快取 10-27 被逐出 → 月中重抓
+      #   Wikidata → 詞彙漂移讓搜尋回歸變紅）。restore-keys 退回上個月的快取；只有「每月前 7 天」或「完全沒快取」
+      #   才重抓，跟 bin/pipeline.sh 的本機規則一致。
       - name: 詞彙層快取（同月沿用）
         id: vocab
         uses: actions/cache/restore@v4
         with:
           path: data/raw/vocab
           key: vocab-${{ steps.month.outputs.ym }}
+          restore-keys: vocab-
 
       # ★ 只下載一次：這一步就把 6 個 CSV 存進 data/raw 並比 sha，後面 pipeline 用 rebuild（不再下載）。
       # ★ 健保署伺服器會間歇性 reset GitHub runner 的連線（curl 56）。連不上時「不更新資料、照常部署現有版本、
@@ -81,12 +87,15 @@ jobs:
 
       - name: 詞彙層（快取沒命中或強制才重抓）
         id: vocabfetch
-        if: steps.check.outputs.ok == '1' && (steps.vocab.outputs.cache-hit != 'true' || inputs.force)
+        if: >-
+          steps.check.outputs.ok == '1' && (inputs.force || steps.vocab.outputs.cache-matched-key == '' ||
+          (steps.vocab.outputs.cache-hit != 'true' && steps.month.outputs.early == '1'))
         run: python3 etl/fetch_vocab.py
 
       # 立刻存快取，不等整個 job 成功（actions/cache 的 post-save 在後面步驟失敗時不會存，下次又得重抓 CDC）
       - name: 存詞彙層快取
         if: steps.vocabfetch.outcome == 'success' && steps.vocab.outputs.cache-hit != 'true'
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: data/raw/vocab
@@ -97,7 +106,11 @@ jobs:
         continue-on-error: true
         run: |
           npx playwright install --with-deps chromium >/dev/null
-          PW_CHANNEL=chromium node bin/fetch_catastrophic.mjs --check | tee "$RUNNER_TEMP/catas.json"
+          # ★ 2026-10 起健保署 WAF 對 runner 回 403：不要讓後面 json.load 噴 traceback 誤導判讀，明確標 warning
+          if ! PW_CHANNEL=chromium node bin/fetch_catastrophic.mjs --check > "$RUNNER_TEMP/catas.json"; then
+            echo "::warning::重大傷病頁面抓不到（多半是 WAF 403），本週略過；本機 make catas 可檢查"
+            echo "changed=0" >> "$GITHUB_OUTPUT"; exit 0
+          fi
           CUR=$(python3 -c "import yaml;print(yaml.safe_load(open('curation/catastrophic.yaml'))['version'])")
           NEW=$(python3 -c "import json,re;t=json.load(open('$RUNNER_TEMP/catas.json'))['title'];m=re.search(r'\((\d{3}\.\d{1,2}\.\d{1,2})更新\)',t);print(m.group(1) if m else '')")
           echo "cur=$CUR new=$NEW"
@@ -105,7 +118,7 @@ jobs:
 
       - name: 完整 pipeline（有變才跑）
         id: pipe
-        if: steps.check.outputs.ok == '1' && (steps.check.outputs.changed == '1' || steps.vocab.outputs.cache-hit != 'true' || inputs.force)
+        if: steps.check.outputs.ok == '1' && (steps.check.outputs.changed == '1' || steps.vocabfetch.outcome == 'success' || inputs.force)
         env:
           OVERRIDE: ${{ inputs.override_gate }}
         run: |
@@ -118,6 +131,8 @@ jobs:
         with:
           name: staging-${{ github.run_id }}
           path: data/build/.staging
+          # ★ .staging 是隱藏目錄，upload-artifact v4.4+ 預設排除 → 之前三次失敗都沒留下 artifact
+          include-hidden-files: true
           if-no-files-found: ignore
 
       - name: commit（只收資料管線路徑）
@@ -188,14 +203,22 @@ jobs:
             await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title,
               body: `本週自動檢查下載失敗，網站維持上一版（未注入 checked_at，超過 21 天網站會警告）。\n通常下週會自己恢復；急用可在本機跑 \`icd update\`（台灣 IP 直連健保署）。\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` });
 
+      # 已有未關閉的失敗 issue → 留言追加，不重複開（2026-10/11 連開三張同樣的）；附上新失分題
       - name: 失敗時開 issue
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo,
-              title: `❌ ${new Date().toISOString().slice(0,10)} 自動更新失敗`,
-              body: `閘門、搜尋回歸或抓取失敗；正式資料未被修改（fail-closed），網站維持上一版。\n若是 gate 1（表頭契約）失敗，健保署可能已轉版到新年度 ICD，需要人工處理。\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` });
+            const fs = require('fs');
+            const f = `${process.env.RUNNER_TEMP}/bench_regress.txt`;
+            const detail = fs.existsSync(f) ? `\n\n\`\`\`\n${fs.readFileSync(f, 'utf8')}\n\`\`\`` : '';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `閘門、搜尋回歸或抓取失敗；正式資料未被修改（fail-closed），網站維持上一版。\n若是 gate 1（表頭契約）失敗，健保署可能已轉版到新年度 ICD，需要人工處理。\n搜尋回歸多半是月初重抓的詞彙層（Wikidata）漂移：看下方新失分題，策展修正後 make rebuild && make verify。${detail}\n\nRun: ${run}`;
+            const { owner, repo } = context.repo;
+            const open = await github.rest.issues.listForRepo({ owner, repo, state: 'open', per_page: 100 });
+            const prev = open.data.find((i) => i.title.endsWith('自動更新失敗'));
+            if (prev) await github.rest.issues.createComment({ owner, repo, issue_number: prev.number, body: `${new Date().toISOString().slice(0,10)} 再次失敗\n\n${body}` });
+            else await github.rest.issues.create({ owner, repo, title: `❌ ${new Date().toISOString().slice(0,10)} 自動更新失敗`, body });
 
   deploy:
     needs: refresh

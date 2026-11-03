@@ -96,3 +96,19 @@ items:
   - {term: 胃痛, codes: [R10.13], note: 官方名「心窩部痛」（Epigastric pain）；功能性消化不良 K30、未明示腹痛 R10.9, approved: true, added_by: claude-v16}
   - {term: 上腹痛, codes: [R10.13], note: 同上；未明示上腹部痛 R10.10, approved: true, added_by: claude-v16}
   - {term: 心窩痛, codes: [R10.13], note: 同上, approved: true, added_by: claude-v16}
+  # v17（2026-11-03）：Wikidata 10 月替 Q62736 加 zh-tw「骨關節炎／退化性關節炎」→ M15/M19/M47，
+  #   「右髖骨關節炎」被拆成「髖＋骨關節炎」→ M19 搶第一（CI 搜尋回歸連三週紅）。部位＋OA 直接釘到部位類目，
+  #   側別交給 lateralize（右 → M16.11、左 → M17.12…）
+  - {term: 髖骨關節炎, codes: [M16.9], note: 官方名「髖部骨關節炎」；單側原發右 M16.11、左 M16.12, approved: true, added_by: claude-v17}
+  - {term: 髖關節骨關節炎, codes: [M16.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 髖部骨關節炎, codes: [M16.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 髖退化性關節炎, codes: [M16.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 髖關節退化性關節炎, codes: [M16.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 退化性髖關節炎, codes: [M16.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 髖關節退化, codes: [M16.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 膝骨關節炎, codes: [M17.9], note: 官方名「膝部骨關節炎」；單側原發右 M17.11、左 M17.12, approved: true, added_by: claude-v17}
+  - {term: 膝關節骨關節炎, codes: [M17.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 膝部骨關節炎, codes: [M17.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 膝退化性關節炎, codes: [M17.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 膝關節退化性關節炎, codes: [M17.9], note: 同上, approved: true, added_by: claude-v17}
+  - {term: 膝關節退化, codes: [M17.9], note: 同上, approved: true, added_by: claude-v17}

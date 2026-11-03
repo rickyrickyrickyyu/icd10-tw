@@ -113,6 +113,7 @@ function main() {
     fresh3: loadItems('fresh3.yaml'),          // 第五批新題（v16）：側別、不分側反例、跨科別；首測後有依失分修正
     fresh4: loadItems('fresh4.yaml'),          // 第六批新題（v16）：首測後有依失分修正
     fresh5: loadItems('fresh5.yaml'),          // 第七批新題：v16 最終定版後才接進來、只測一次
+    drift: loadItems('drift.yaml'),            // 上游詞彙漂移真的打掉過的查詢（v17：Wikidata OA 標籤）
     index_heldout: sample(held.filter((x) => x.src === 'cdc-idx' || x.src === 'cdc-see'), 1500, 'i')
       .map((x) => ({ q: x.q, gold: goldOf(x) })),
     zh_heldout: sample(held.filter((x) => x.src === 'zh14' || x.src === 'zh9'), 1000, 'z')
@@ -196,7 +197,9 @@ function main() {
 
   const basePath = join(HERE, 'baseline.json');
   if (has('--accept')) {
-    writeFileSync(basePath, JSON.stringify({ at: entry.at, git, sets: report.sets, p95: report.p95 }, null, 1));
+    // fails 一併存：--check 失敗時才能列出「新掉的是哪幾題」，不必再重建一次資料來查
+    const failQ = Object.fromEntries(Object.entries(fails).map(([k, v]) => [k, v.map((f) => f.q)]));
+    writeFileSync(basePath, JSON.stringify({ at: entry.at, git, sets: report.sets, p95: report.p95, fails: failQ }, null, 1));
     console.log('\n✅ 已寫入 baseline.json');
   }
   if (has('--check')) {
@@ -209,7 +212,20 @@ function main() {
         if (now !== undefined && now < s.all[k] - 1) drops.push(`${name}.${k} ${s.all[k]} → ${now}`);
       }
     }
-    if (drops.length) { console.error(`\n❌ 搜尋品質回歸：\n  ${drops.join('\n  ')}`); return 1; }
+    if (drops.length) {
+      // 列出退步題組裡「baseline 沒錯、現在錯」的題目：CI log／issue 直接看得到是哪題被上游詞彙漂移帶走
+      const lines = [];
+      for (const name of new Set(drops.map((d) => d.split('.')[0]))) {
+        const was = new Set(base.fails?.[name] ?? []);
+        for (const f of fails[name] ?? []) {
+          if (!was.has(f.q)) lines.push(`${name} [${f.rank}] ${f.q}  gold=${f.gold.join('|')}  → ${f.top.join(' ; ')}`);
+        }
+      }
+      const msg = `❌ 搜尋品質回歸：\n  ${drops.join('\n  ')}\n\n新失分題（rank -1 = 前 20 名沒有）：\n  ${lines.join('\n  ') || '（baseline 無失分清單，請 --show 查）'}`;
+      console.error(`\n${msg}`);
+      if (process.env.RUNNER_TEMP) writeFileSync(join(process.env.RUNNER_TEMP, 'bench_regress.txt'), msg);
+      return 1;
+    }
     console.log('\n✅ 無回歸（與 baseline 相比各指標掉幅 ≤ 1 點）');
   }
   return 0;
