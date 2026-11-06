@@ -45,6 +45,8 @@ jobs:
         with:
           python-version: '3.12'
       - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false   # v7 預設開快取，找不到 requirements 檔會一直警告；只裝兩個套件不需要
       - name: Python 依賴
         run: uv pip install --system pyyaml
 
